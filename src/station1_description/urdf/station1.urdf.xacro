@@ -1,0 +1,177 @@
+<?xml version="1.0"?>
+<!--
+  Estacion 1 - Alimentacion y singulacion
+  Configuracion RRP, tipo SCARA: theta1 en la base, theta2 en el hombro y d3
+  como desplazamiento vertical.
+
+  Responsable: Santiago Fernando Machado Sanchez
+
+  La geometria vive en parametros.xacro y las propiedades inerciales se derivan
+  de ella mediante las macros de inercias.xacro. Al sustituir las dimensiones
+  por las del CAD definitivo, masas e inercias se recalculan solas.
+
+  Todos los frames llevan el prefijo de la estacion, segun ADR-005.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="station1">
+
+  <xacro:arg name="prefijo" default="station1/"/>
+  <xacro:property name="p" value="$(arg prefijo)"/>
+
+  <xacro:include filename="$(find station1_description)/urdf/parametros.xacro"/>
+  <xacro:include filename="$(find station1_description)/urdf/inercias.xacro"/>
+  <xacro:include filename="$(find station1_description)/urdf/station1.gazebo.xacro"/>
+
+  <material name="acrilico">  <color rgba="0.35 0.55 0.75 0.75"/></material>
+  <material name="mdf">       <color rgba="0.72 0.58 0.38 1.0"/></material>
+  <material name="pla">       <color rgba="0.90 0.90 0.90 1.0"/></material>
+  <material name="metal">     <color rgba="0.55 0.55 0.58 1.0"/></material>
+
+  <!-- ==================== base_link ====================
+       Placa de MDF de 12 mm y columna de PLA. Es un eslabon fijo, de modo que
+       su inercia no interviene en la dinamica; se declara por completitud. -->
+  <link name="${p}base_link">
+    <visual>
+      <origin xyz="0 0 ${base_z/2}"/>
+      <geometry><box size="${base_x} ${base_y} ${base_z}"/></geometry>
+      <material name="mdf"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${base_z + (altura_columna - base_z)/2}"/>
+      <geometry><cylinder radius="${columna_radio}" length="${altura_columna - base_z}"/></geometry>
+      <material name="pla"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${base_z/2}"/>
+      <geometry><box size="${base_x} ${base_y} ${base_z}"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 ${base_z + (altura_columna - base_z)/2}"/>
+      <geometry><cylinder radius="${columna_radio}" length="${altura_columna - base_z}"/></geometry>
+    </collision>
+    <xacro:inercia_caja x="${base_x}" y="${base_y}" z="${base_z}" densidad="${densidad_mdf}">
+      <origin xyz="0 0 ${base_z/2}"/>
+    </xacro:inercia_caja>
+  </link>
+
+  <!-- ==================== theta1: rotacion de la base ==================== -->
+  <joint name="${p}joint_1" type="revolute">
+    <parent link="${p}base_link"/>
+    <child  link="${p}link_1"/>
+    <origin xyz="0 0 ${altura_columna}"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-lim_theta1}" upper="${lim_theta1}"
+           velocity="${vel_rot}" effort="${esfuerzo_rot}"/>
+    <dynamics damping="0.05" friction="0.01"/>
+  </joint>
+
+  <link name="${p}link_1">
+    <visual>
+      <origin xyz="${l1/2} 0 0"/>
+      <geometry><box size="${l1} ${brazo_ancho} ${brazo_espesor}"/></geometry>
+      <material name="acrilico"/>
+    </visual>
+    <collision>
+      <origin xyz="${l1/2} 0 0"/>
+      <geometry><box size="${l1} ${brazo_ancho} ${brazo_espesor}"/></geometry>
+    </collision>
+    <xacro:inercia_caja x="${l1}" y="${brazo_ancho}" z="${brazo_espesor}"
+                        densidad="${densidad_acrilico}">
+      <origin xyz="${l1/2} 0 0"/>
+    </xacro:inercia_caja>
+  </link>
+
+  <!-- ==================== theta2: hombro ==================== -->
+  <joint name="${p}joint_2" type="revolute">
+    <parent link="${p}link_1"/>
+    <child  link="${p}link_2"/>
+    <origin xyz="${l1} 0 ${-brazo_espesor}"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-lim_theta2}" upper="${lim_theta2}"
+           velocity="${vel_rot}" effort="${esfuerzo_rot}"/>
+    <dynamics damping="0.05" friction="0.01"/>
+  </joint>
+
+  <link name="${p}link_2">
+    <visual>
+      <origin xyz="${l2/2} 0 0"/>
+      <geometry><box size="${l2} ${brazo_ancho} ${brazo_espesor}"/></geometry>
+      <material name="acrilico"/>
+    </visual>
+    <collision>
+      <origin xyz="${l2/2} 0 0"/>
+      <geometry><box size="${l2} ${brazo_ancho} ${brazo_espesor}"/></geometry>
+    </collision>
+    <xacro:inercia_caja x="${l2}" y="${brazo_ancho}" z="${brazo_espesor}"
+                        densidad="${densidad_acrilico}">
+      <origin xyz="${l2/2} 0 0"/>
+    </xacro:inercia_caja>
+  </link>
+
+  <!-- ==================== d3: desplazamiento vertical ====================
+       Accionada por husillo. El eje asciende por encima del brazo cuando el
+       efector desciende, de ahi que la altura maxima de la estacion sea la
+       suma de la columna y la carrera. -->
+  <joint name="${p}joint_3" type="prismatic">
+    <parent link="${p}link_2"/>
+    <child  link="${p}link_3"/>
+    <origin xyz="${l2} 0 0"/>
+    <axis xyz="0 0 -1"/>
+    <limit lower="0.0" upper="${carrera_d3}"
+           velocity="${vel_pris}" effort="${esfuerzo_pris}"/>
+    <dynamics damping="2.0" friction="0.5"/>
+  </joint>
+
+  <link name="${p}link_3">
+    <visual>
+      <origin xyz="0 0 ${carrera_d3/2}"/>
+      <geometry><cylinder radius="${eje_radio}" length="${carrera_d3}"/></geometry>
+      <material name="metal"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${carrera_d3/2}"/>
+      <geometry><cylinder radius="${eje_radio}" length="${carrera_d3}"/></geometry>
+    </collision>
+    <xacro:inercia_cilindro radio="${eje_radio}" longitud="${carrera_d3}"
+                            densidad="${densidad_pla}">
+      <origin xyz="0 0 ${carrera_d3/2}"/>
+    </xacro:inercia_cilindro>
+  </link>
+
+  <!-- ==================== Efector final ====================
+       Micro servo Tower Pro 9 g con mordaza impresa. No cuenta como grado de
+       libertad: los tres GDL son los tres motores DC. -->
+  <joint name="${p}gripper_joint" type="revolute">
+    <parent link="${p}link_3"/>
+    <child  link="${p}gripper_link"/>
+    <origin xyz="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0.0" upper="${lim_gripper}" velocity="3.0" effort="0.15"/>
+  </joint>
+
+  <link name="${p}gripper_link">
+    <visual>
+      <origin xyz="0 0 ${-gripper_z/2}"/>
+      <geometry><box size="${gripper_x} ${gripper_y} ${gripper_z}"/></geometry>
+      <material name="pla"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${-gripper_z/2}"/>
+      <geometry><box size="${gripper_x} ${gripper_y} ${gripper_z}"/></geometry>
+    </collision>
+    <xacro:inercia_componente masa="${masa_servo}"
+                              x="${gripper_x}" y="${gripper_y}" z="${gripper_z}">
+      <origin xyz="0 0 ${-gripper_z/2}"/>
+    </xacro:inercia_componente>
+  </link>
+
+  <!-- Punto de referencia del efector, donde se sujeta la pieza. -->
+  <joint name="${p}tool0_joint" type="fixed">
+    <parent link="${p}gripper_link"/>
+    <child  link="${p}tool0"/>
+    <origin xyz="0 0 ${-gripper_z}"/>
+  </joint>
+  <link name="${p}tool0"/>
+
+  <xacro:station1_gazebo prefijo="${p}"/>
+
+</robot>

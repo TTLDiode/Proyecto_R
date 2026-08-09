@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!--
+  Parametros geometricos y de material de la Estacion 1.
+
+  Todas las dimensiones del modelo salen de aqui. Cuando el CAD este terminado
+  se sustituyen estos valores por los reales y el resto del modelo se ajusta
+  solo, incluidas las propiedades inerciales, que se calculan a partir de la
+  geometria y la densidad del material asignado.
+
+  Unidades del Sistema Internacional: metros, kilogramos, radianes, segundos.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ================== Restricciones de la guia ================== -->
+  <!-- Envolvente de trabajo en el plano XY: radio 320 mm +/- 20 mm.   -->
+  <!-- Envolvente en el plano YZ: 300 mm +/- 20 mm, interpretado como  -->
+  <!-- la altura total de la estacion. Confirmar con el profesor.      -->
+  <xacro:property name="alcance_xy"      value="0.320"/>
+  <xacro:property name="altura_estacion" value="0.300"/>
+
+  <!-- ================== Cadena cinematica RRP ===================== -->
+  <!-- theta1 base, theta2 hombro, d3 vertical. Tipo SCARA.           -->
+  <!-- l1 + l2 = alcance_xy, de modo que el alcance maximo coincide    -->
+  <!-- exactamente con el radio nominal exigido.                       -->
+  <xacro:property name="l1" value="0.180"/>   <!-- eslabon 1, brazo    -->
+  <xacro:property name="l2" value="0.140"/>   <!-- eslabon 2, antebrazo-->
+
+  <!-- Altura del plano del brazo y carrera vertical.
+       El eje de la prismatica sobresale por encima del brazo cuando el efector
+       baja, de modo que la altura maxima de la estacion es la suma de ambas:
+       0.180 + 0.120 = 0.300 m, que es exactamente el valor nominal exigido.
+       El efector recorre entonces z de 0.145 a 0.025, y los puntos de tarea
+       estan a 0.050 y 0.060. -->
+  <xacro:property name="altura_columna" value="0.180"/>
+  <xacro:property name="carrera_d3"     value="0.120"/>
+
+  <!-- ================== Limites de articulacion ==================== -->
+  <xacro:property name="lim_theta1" value="2.618"/>   <!-- +/- 150 grados -->
+  <xacro:property name="lim_theta2" value="2.356"/>   <!-- +/- 135 grados -->
+  <xacro:property name="lim_gripper" value="0.500"/>
+
+  <!-- Velocidad maxima de las articulaciones rotacionales.            -->
+  <!-- Motor Pololu de 200 RPM: 200 * 2*pi / 60 = 20.944 rad/s en el   -->
+  <!-- eje de salida, sin reduccion adicional.                          -->
+  <xacro:property name="vel_rot" value="20.944"/>
+
+  <!-- Velocidad de la articulacion prismatica. Husillo T8 de 8 mm de  -->
+  <!-- avance por vuelta: 200/60 rev/s * 0.008 m = 0.0267 m/s.          -->
+  <xacro:property name="avance_husillo" value="0.008"/>
+  <xacro:property name="vel_pris" value="0.0267"/>
+
+  <!-- PROVISIONAL. El par disponible en el eje de salida debe tomarse  -->
+  <!-- de la hoja de datos del motor antes de la Entrega 2, junto con   -->
+  <!-- el calculo del par requerido por cada articulacion.              -->
+  <xacro:property name="esfuerzo_rot"  value="0.50"/>   <!-- N.m  -->
+  <xacro:property name="esfuerzo_pris" value="20.0"/>   <!-- N    -->
+
+  <!-- ================== Materiales ================================ -->
+  <!-- Densidades reales, usadas para derivar masas e inercias.        -->
+  <xacro:property name="densidad_mdf"     value="700.0"/>    <!-- kg/m3 -->
+  <xacro:property name="densidad_acrilico" value="1180.0"/>  <!-- kg/m3 -->
+  <xacro:property name="densidad_pla"     value="1240.0"/>   <!-- kg/m3 -->
+
+  <!-- ================== Geometria de las piezas ==================== -->
+  <!-- Base: placa de MDF de 12 mm -->
+  <xacro:property name="base_x" value="0.200"/>
+  <xacro:property name="base_y" value="0.200"/>
+  <xacro:property name="base_z" value="0.012"/>
+
+  <!-- Columna: tubo de PLA impreso -->
+  <xacro:property name="columna_radio" value="0.030"/>
+
+  <!-- Eslabones del brazo: acrilico cortado por laser, 8 mm -->
+  <xacro:property name="brazo_ancho"   value="0.050"/>
+  <xacro:property name="brazo_espesor" value="0.008"/>
+
+  <!-- Eje vertical de la prismatica: varilla de PLA -->
+  <xacro:property name="eje_radio" value="0.010"/>
+
+  <!-- Efector final: micro servo Tower Pro 9 g mas mordaza impresa -->
+  <xacro:property name="gripper_x" value="0.040"/>
+  <xacro:property name="gripper_y" value="0.030"/>
+  <xacro:property name="gripper_z" value="0.035"/>
+  <xacro:property name="masa_servo" value="0.009"/>
+
+</robot>

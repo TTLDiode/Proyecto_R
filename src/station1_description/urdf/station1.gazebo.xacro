@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--
+  Etiquetas especificas de Gazebo para la Estacion 1.
+
+  En la Entrega 1 el modelo se limita a existir y a spawnearse correctamente,
+  sin control de trayectoria. Las interfaces de ros2_control se anaden en la
+  Entrega 2, cuando el nodo de control ejecute movimientos.
+
+  Los coeficientes de rozamiento y los parametros de contacto se declaran aqui
+  y no en el URDF general porque solo tienen sentido dentro del simulador.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="station1_gazebo" params="prefijo">
+
+    <gazebo reference="${prefijo}base_link">
+      <material>Gazebo/Wood</material>
+      <mu1>0.8</mu1>
+      <mu2>0.8</mu2>
+    </gazebo>
+
+    <gazebo reference="${prefijo}link_1">
+      <material>Gazebo/BlueTransparent</material>
+    </gazebo>
+
+    <gazebo reference="${prefijo}link_2">
+      <material>Gazebo/BlueTransparent</material>
+    </gazebo>
+
+    <gazebo reference="${prefijo}link_3">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo reference="${prefijo}gripper_link">
+      <material>Gazebo/White</material>
+      <!-- Rozamiento alto en la mordaza. La sujecion real la resuelve el
+           acople cinematico de ADR-002, no el contacto. -->
+      <mu1>1.2</mu1>
+      <mu2>1.2</mu2>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>
