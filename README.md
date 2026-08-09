@@ -141,5 +141,5 @@ Ninguna estación define poses de traspaso en su código: todas las leen de
 - **Git LFS.** Sin configurar. Si se van a versionar los archivos nativos de CAD
   (SLDPRT, F3D), conviene activarlo antes de añadirlos; migrar después es costoso.
   Si solo se versionan STL decimados y planos en PDF, no hace falta.
-- **Verificación de cinemática.** La carpeta `matlab/` asume MATLAB, que es lo que
-  nombra la guía. Si se prefiere Python con SymPy, basta con renombrarla.
+La verificación numérica de la cinemática se hace en **MATLAB**, que es la
+herramienta que nombra la guía. Los scripts van en `matlab/`, uno por estación.
