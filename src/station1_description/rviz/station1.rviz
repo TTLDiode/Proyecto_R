@@ -1,41 +1,90 @@
 Panels:
   - Class: rviz_common/Displays
     Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /RobotModel1
+      Splitter Ratio: 0.5
+    Tree Height: 600
   - Class: rviz_common/Views
     Name: Views
+    Expanded:
+      - /Current View1
 Visualization Manager:
   Class: ""
+  Name: root
   Displays:
     - Class: rviz_default_plugins/Grid
-      Cell Size: 0.05
-      Color: 160; 160; 164
-      Enabled: true
-      Line Style:
-        Value: Lines
       Name: Grid
+      Enabled: true
+      Value: true
+      Cell Size: 0.05
       Plane: XY
       Plane Cell Count: 20
+      Color: 160; 160; 164
+      Alpha: 0.5
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Reference Frame: <Fixed Frame>
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
       Value: true
-    - Alpha: 1
-      Class: rviz_default_plugins/RobotModel
+      Alpha: 1
       Description Source: Topic
+      Description File: ""
       Description Topic:
         Depth: 5
         Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
         Value: /robot_description
-      Enabled: true
-      Name: RobotModel
       Visual Enabled: true
       Collision Enabled: false
-      Value: true
+      TF Prefix: ""
+      Update Interval: 0
     - Class: rviz_default_plugins/TF
-      Enabled: true
-      Marker Scale: 0.1
       Name: TF
+      Enabled: true
+      Value: true
+      Marker Scale: 0.08
       Show Arrows: true
       Show Axes: true
       Show Names: true
-      Value: true
+      Frame Timeout: 15
+      Update Interval: 0
+  # Sin este bloque la barra de herramientas queda vacia y el raton no
+  # controla la camara. Move Camera es la herramienta activa por defecto.
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
+  # Controlador de camara. Orbit gira alrededor del punto focal con el boton
+  # izquierdo, desplaza con el central y acerca con la rueda.
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Distance: 0.8
+      Yaw: 0.9
+      Pitch: 0.6
+      Focal Point:
+        X: 0.05
+        Y: 0.05
+        Z: 0.12
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Near Clip Distance: 0.01
+      Target Frame: <Fixed Frame>
+      Invert Z Axis: false
+      Value: Orbit (rviz_default_plugins)
+    Saved: ~
   Global Options:
     Background Color: 48; 48; 48
     Fixed Frame: station1/base_link
@@ -46,3 +95,7 @@ Window Geometry:
   Width: 1300
   Displays:
     collapsed: false
+  Views:
+    collapsed: false
+  Hide Left Dock: false
+  Hide Right Dock: false
