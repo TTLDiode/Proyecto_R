@@ -1,0 +1,6 @@
+# Peticion de inicio de ciclo de una estacion.
+
+HandoffEvent input
+---
+bool accepted
+string message

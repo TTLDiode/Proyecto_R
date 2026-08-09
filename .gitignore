@@ -1,0 +1,22 @@
+# Artefactos de compilacion de colcon
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Sistema
+.DS_Store
+
+# Videos y renders: van a Notion, no al repositorio
+*.mp4
+*.mov
+*.mkv

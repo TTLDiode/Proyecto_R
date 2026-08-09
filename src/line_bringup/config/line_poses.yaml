@@ -1,0 +1,46 @@
+# Poses de la linea, todas en frame "world". Unidades: metros y radianes.
+#
+# Propiedad compartida. Toda modificacion se acuerda entre los tres integrantes,
+# porque un cambio aqui mueve los puntos de traspaso de dos estaciones a la vez.
+#
+# Valores preliminares. Se fijan tras el hito H2, con la geometria definitiva
+# de los tres modelos CAD.
+
+frame_id: world
+
+# Poses base de cada estacion en el mundo
+station_bases:
+  station1: { x: 0.000, y: 0.000, z: 0.0, yaw: 0.0 }
+  station2: { x: 0.700, y: 0.000, z: 0.0, yaw: 0.0 }
+  station3: { x: 1.400, y: 0.000, z: 0.0, yaw: 0.0 }
+
+# Bandeja de entrada de la Estacion 1
+input_tray:
+  center: { x: -0.200, y: 0.150, z: 0.050 }
+  size:   { x:  0.150, y: 0.150 }
+
+# Punto fijo de traspaso de la Estacion 1 a la Estacion 2
+handoff_1_2:
+  position:    { x: 0.350, y: 0.000, z: 0.060 }
+  orientation: { roll: 0.0, pitch: 0.0, yaw: 0.0 }
+
+# Punto de entrada de la Estacion 3
+handoff_2_3:
+  position:    { x: 1.050, y: 0.000, z: 0.060 }
+  orientation: { roll: 0.0, pitch: 0.0, yaw: 0.0 }
+
+# Cajas de empaque de la Estacion 3
+packing:
+  units_per_box: 10
+  categories: ["A", "B", "C"]
+  box_slots:
+    A: { x: 1.600, y: -0.150, z: 0.040 }
+    B: { x: 1.600, y:  0.000, z: 0.040 }
+    C: { x: 1.600, y:  0.150, z: 0.040 }
+  next_box_offset: { x: 0.180, y: 0.0, z: 0.0 }
+
+# Restricciones verificables de la guia
+constraints:
+  station1_cycle_time_s:    30.0
+  station2_position_tol_mm: 20.0
+  station3_units_per_box:   10
