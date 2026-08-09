@@ -136,10 +136,3 @@ metros, kilogramos, radianes y segundos.
 Ninguna estación define poses de traspaso en su código: todas las leen de
 `src/line_bringup/config/line_poses.yaml`.
 
-## Decisiones pendientes
-
-- **Git LFS.** Sin configurar. Si se van a versionar los archivos nativos de CAD
-  (SLDPRT, F3D), conviene activarlo antes de añadirlos; migrar después es costoso.
-  Si solo se versionan STL decimados y planos en PDF, no hace falta.
-La verificación numérica de la cinemática se hace en **MATLAB**, que es la
-herramienta que nombra la guía. Los scripts van en `matlab/`, uno por estación.
