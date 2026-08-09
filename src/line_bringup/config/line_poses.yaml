@@ -22,8 +22,8 @@ station_bases:
 # La comprobacion de alcance se hace contra la esquina mas lejana de la zona de
 # dispersion, no contra su centro: la pieza puede aparecer en cualquier punto.
 input_tray:
-  center: { x: -0.150, y: 0.080, z: 0.050 }
-  size:   { x:  0.120, y: 0.120 }
+  center: { x: -0.180, y: 0.100, z: 0.050 }
+  size:   { x:  0.100, y: 0.100 }
 
 # Punto fijo de traspaso de la Estacion 1 a la Estacion 2.
 # Equidistante de ambas bases, a 250 mm de cada una.
