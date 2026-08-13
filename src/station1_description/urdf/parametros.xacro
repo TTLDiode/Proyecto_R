@@ -71,13 +71,21 @@
   <xacro:property name="esfuerzo_pris" value="20.0"/>   <!-- N    -->
 
   <!-- ================== Actuadores ================================
-       Envolvente medida sobre el modelo CAD del fabricante. La masa procede
-       de la hoja de datos y debe confirmarse con la referencia exacta que
-       entregue el laboratorio: la version con reductora es mas larga.
+       Envolvente medida sobre Gearmotor_37D_100.stp, que es la version con
+       reductora: 94.6 mm de largo total y 36.8 mm de diametro de cuerpo. La
+       masa procede de la hoja de datos de Pololu y queda por confirmar contra
+       la referencia exacta que entregue el laboratorio.
   -->
   <xacro:property name="motor_diametro" value="0.037"/>
-  <xacro:property name="motor_largo"    value="0.082"/>
+  <xacro:property name="motor_largo"    value="0.095"/>
   <xacro:property name="motor_masa"     value="0.200"/>
+
+  <!-- Interfaz mecanica del motor, medida sobre Gearmotor_37D_100.stp.
+       Condiciona el diseno de las poleas, del acoplamiento al husillo y de
+       los soportes. -->
+  <xacro:property name="motor_eje_diametro"   value="0.006"/>
+  <xacro:property name="motor_brida_diametro" value="0.016"/>
+  <xacro:property name="motor_tornillo"       value="0.003"/>   <!-- M3 -->
 
   <!-- Micro servo Tower Pro 9 g -->
   <xacro:property name="servo_x"    value="0.023"/>
