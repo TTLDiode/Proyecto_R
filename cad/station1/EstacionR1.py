@@ -235,6 +235,7 @@ def run(context):
         c = COTAS
 
         # Alturas derivadas, calculadas igual que en el URDF.
+        # Cara inferior del eslabon 1: la columna termina aqui, no lo atraviesa.
         z_link1 = c['altura_columna'] - c['brazo_espesor'] / 2.0
         z_link2 = c['altura_columna'] - c['brazo_espesor'] * 1.5
         z_base_husillo = c['altura_columna'] - c['brazo_espesor']
@@ -250,18 +251,18 @@ def run(context):
 
         columna = cilindro_z(raiz, 'columna', 0.0, 0.0, c['base_z'],
                              c['columna_radio'],
-                             c['altura_columna'] - c['base_z'])
+                             z_link1 - c['base_z'])
         aplicar_material(app, design, columna, 'PLA', avisos)
 
         # Motor de theta1, alojado dentro de la columna.
         m1 = cilindro_z(raiz, 'motor_theta1', 0.0, 0.0,
-                        c['altura_columna'] - c['motor_largo'],
+                        z_link1 - c['motor_largo'],
                         c['motor_diametro'] / 2.0, c['motor_largo'])
         aplicar_material(app, design, m1, 'ALUMINIO', avisos)
 
         # ---------------- Brazo ----------------
         link1 = caja(raiz, 'link_1', 0.0, -c['brazo_ancho'] / 2.0,
-                     z_link1 - c['brazo_espesor'] / 2.0,
+                     z_link1,
                      c['l1'], c['brazo_ancho'], c['brazo_espesor'])
         aplicar_material(app, design, link1, 'ACRILICO', avisos)
 
@@ -269,7 +270,7 @@ def run(context):
         # Asi la distancia a la polea del codo no cambia al girar el brazo, y
         # su masa queda a radio cero del eje.
         m2 = cilindro_z(raiz, 'motor_theta2', 0.0, 0.0,
-                        z_link1 + c['brazo_espesor'] / 2.0,
+                        z_link1 + c['brazo_espesor'],
                         c['motor_diametro'] / 2.0, c['motor_largo'])
         aplicar_material(app, design, m2, 'ALUMINIO', avisos)
 
