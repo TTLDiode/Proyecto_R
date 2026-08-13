@@ -15,7 +15,7 @@ masa en voladizo:
 
     theta1  motor alojado dentro de la columna, accionamiento directo
     theta2  motor en la base, correa dentada por dentro del eslabon 1
-    d3      motor en el codo, correa al husillo del extremo del eslabon 2
+    d3      motor vertical junto al codo, correa al husillo del extremo
 
 El eje vertical es un husillo fijo al eslabon 2 con la tuerca desplazandose
 sobre el, y el efector cuelga de un vastago guiado. La altura maxima de la
@@ -59,6 +59,7 @@ COTAS = {
     'base_z':           12.0,
     'columna_radio':    30.0,
     'motor2_offset':    60.0,
+    'motor3_offset':    30.0,
     'brazo_ancho':      50.0,
     'brazo_espesor':     8.0,
     'motor_diametro':   37.0,
@@ -274,13 +275,11 @@ def run(context):
                      c['l2'], c['brazo_ancho'], c['brazo_espesor'])
         aplicar_material(app, design, link2, 'ACRILICO', avisos)
 
-        # Motor de d3, tumbado sobre el codo. Acciona el husillo por correa.
-        # Se representa como envolvente prismatica: es un hueco reservado, y el
-        # modelo real del fabricante se emparejara aqui.
-        m3 = caja(raiz, 'motor_d3',
-                  x_codo + 10.0, -c['motor_diametro'] / 2.0,
-                  z_link2 + c['brazo_espesor'] / 2.0,
-                  c['motor_largo'], c['motor_diametro'], c['motor_diametro'])
+        # Motor de d3, vertical sobre el eslabon 2 y paralelo al husillo:
+        # una correa dentada exige ejes paralelos.
+        m3 = cilindro_z(raiz, 'motor_d3', x_codo + c['motor3_offset'], 0.0,
+                        z_link2 + c['brazo_espesor'] / 2.0,
+                        c['motor_diametro'] / 2.0, c['motor_largo'])
         aplicar_material(app, design, m3, 'ALUMINIO', avisos)
 
         # ---------------- Eje vertical ----------------

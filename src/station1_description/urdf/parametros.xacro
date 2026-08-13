@@ -137,6 +137,11 @@
   <!-- Posicion del motor de theta2 en la base, junto a la columna -->
   <xacro:property name="motor2_offset" value="0.060"/>
 
+  <!-- Posicion del motor de d3 sobre el eslabon 2, medida desde el codo.
+       Va vertical, paralelo al husillo, porque una correa dentada exige
+       ejes paralelos. La distancia entre centros es l2 - motor3_offset. -->
+  <xacro:property name="motor3_offset" value="0.030"/>
+
   <!-- Eslabones del brazo: acrilico cortado por laser, 8 mm -->
   <xacro:property name="brazo_ancho"   value="0.050"/>
   <xacro:property name="brazo_espesor" value="0.008"/>
