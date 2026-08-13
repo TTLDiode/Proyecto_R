@@ -134,8 +134,9 @@
   <!-- Columna: tubo que aloja el motor de theta1 -->
   <xacro:property name="columna_radio" value="0.030"/>
 
-  <!-- Posicion del motor de theta2 en la base, junto a la columna -->
-  <xacro:property name="motor2_offset" value="0.060"/>
+  <!-- El motor de theta2 va sobre el eslabon 1, coaxial con el eje de
+       theta1, de modo que la distancia a la polea del codo sea constante
+       al girar el brazo. Su masa queda a radio cero del eje de theta1. -->
 
   <!-- Posicion del motor de d3 sobre el eslabon 2, medida desde el codo.
        Va vertical, paralelo al husillo, porque una correa dentada exige
