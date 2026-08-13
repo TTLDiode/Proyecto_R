@@ -8,6 +8,12 @@
   geometria y la densidad del material asignado.
 
   Unidades del Sistema Internacional: metros, kilogramos, radianes, segundos.
+
+  Revision del 13 de agosto de 2026: arquitectura de transmision por correa.
+  Los motores Pololu 37D miden 37 mm de diametro y pesan del orden de 200 g
+  cada uno. Montados directamente sobre las articulaciones rompian la
+  restriccion de altura y dejaban dos tercios de la masa en voladizo, de modo
+  que los dos motores rotacionales pasan a la base y accionan por correa.
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
@@ -25,62 +31,99 @@
   <xacro:property name="l1" value="0.180"/>   <!-- eslabon 1, brazo    -->
   <xacro:property name="l2" value="0.140"/>   <!-- eslabon 2, antebrazo-->
 
-  <!-- Altura del plano del brazo y carrera vertical.
-       El eje de la prismatica sobresale por encima del brazo cuando el efector
-       baja, de modo que la altura maxima de la estacion es la suma de ambas:
-       0.180 + 0.120 = 0.300 m, que es exactamente el valor nominal exigido.
-       El efector recorre entonces z de 0.145 a 0.025, y los puntos de tarea
-       estan a 0.050 y 0.060. -->
-  <xacro:property name="altura_columna" value="0.180"/>
+  <!-- Altura del plano del brazo. La columna aloja en su interior el
+       motor de theta1, de modo que debe ser mas alta que el propio motor. -->
+  <xacro:property name="altura_columna" value="0.170"/>
+
+  <!-- ================== Eje vertical d3 ===========================
+       Husillo fijo al eslabon 2, con la tuerca desplazandose sobre el. El
+       efector cuelga de la tuerca mediante un vastago guiado. La altura
+       maxima de la estacion la fija el extremo del husillo, que no se mueve:
+       altura_columna - brazo_espesor + husillo_largo.
+  -->
+  <xacro:property name="husillo_largo"  value="0.145"/>  <!-- carrera mas tuerca y rodamiento -->
+  <xacro:property name="husillo_radio"  value="0.004"/>  <!-- T8, 8 mm de diametro -->
   <xacro:property name="carrera_d3"     value="0.120"/>
+  <xacro:property name="vastago_largo"  value="0.150"/>
+  <xacro:property name="vastago_radio"  value="0.008"/>
+  <xacro:property name="tuerca_lado"    value="0.030"/>
 
   <!-- ================== Limites de articulacion ==================== -->
   <xacro:property name="lim_theta1" value="2.618"/>   <!-- +/- 150 grados -->
   <xacro:property name="lim_theta2" value="2.356"/>   <!-- +/- 135 grados -->
   <xacro:property name="lim_gripper" value="0.500"/>
 
-  <!-- Velocidad maxima de las articulaciones rotacionales.            -->
-  <!-- Motor Pololu de 200 RPM: 200 * 2*pi / 60 = 20.944 rad/s en el   -->
-  <!-- eje de salida, sin reduccion adicional.                          -->
-  <xacro:property name="vel_rot" value="20.944"/>
+  <!-- Velocidad de las articulaciones rotacionales.
+       Motor Pololu de 200 RPM: 200 * 2*pi / 60 = 20.944 rad/s en el eje de
+       salida. La transmision por correa es de relacion 1:1, de modo que la
+       articulacion gira a la misma velocidad. -->
+  <xacro:property name="relacion_correa" value="1.0"/>
+  <xacro:property name="vel_rot" value="${20.944 / relacion_correa}"/>
 
-  <!-- Velocidad de la articulacion prismatica. Husillo T8 de 8 mm de  -->
-  <!-- avance por vuelta: 200/60 rev/s * 0.008 m = 0.0267 m/s.          -->
+  <!-- Velocidad de la articulacion prismatica. Husillo T8 de 8 mm de
+       avance por vuelta: 200/60 rev/s * 0.008 m = 0.0267 m/s. -->
   <xacro:property name="avance_husillo" value="0.008"/>
   <xacro:property name="vel_pris" value="0.0267"/>
 
-  <!-- PROVISIONAL. El par disponible en el eje de salida debe tomarse  -->
-  <!-- de la hoja de datos del motor antes de la Entrega 2, junto con   -->
-  <!-- el calculo del par requerido por cada articulacion.              -->
+  <!-- PROVISIONAL. El par disponible debe tomarse de la hoja de datos del
+       motor y contrastarse con el par requerido por cada articulacion. -->
   <xacro:property name="esfuerzo_rot"  value="0.50"/>   <!-- N.m  -->
   <xacro:property name="esfuerzo_pris" value="20.0"/>   <!-- N    -->
 
+  <!-- ================== Actuadores ================================
+       Envolvente medida sobre el modelo CAD del fabricante. La masa procede
+       de la hoja de datos y debe confirmarse con la referencia exacta que
+       entregue el laboratorio: la version con reductora es mas larga.
+  -->
+  <xacro:property name="motor_diametro" value="0.037"/>
+  <xacro:property name="motor_largo"    value="0.082"/>
+  <xacro:property name="motor_masa"     value="0.200"/>
+
+  <!-- Micro servo Tower Pro 9 g -->
+  <xacro:property name="servo_x"    value="0.023"/>
+  <xacro:property name="servo_y"    value="0.012"/>
+  <xacro:property name="servo_z"    value="0.029"/>
+  <xacro:property name="masa_servo" value="0.009"/>
+
+  <!-- Mordaza impresa que sujeta la pieza -->
+  <xacro:property name="gripper_x" value="0.040"/>
+  <xacro:property name="gripper_y" value="0.030"/>
+  <xacro:property name="gripper_z" value="0.035"/>
+
   <!-- ================== Materiales ================================ -->
   <!-- Densidades reales, usadas para derivar masas e inercias.        -->
-  <xacro:property name="densidad_mdf"     value="700.0"/>    <!-- kg/m3 -->
+  <xacro:property name="densidad_mdf"      value="700.0"/>   <!-- kg/m3 -->
   <xacro:property name="densidad_acrilico" value="1180.0"/>  <!-- kg/m3 -->
-  <xacro:property name="densidad_pla"     value="1240.0"/>   <!-- kg/m3 -->
+  <xacro:property name="densidad_pla"      value="1240.0"/>  <!-- kg/m3 -->
+  <xacro:property name="densidad_acero"    value="7850.0"/>  <!-- kg/m3 -->
+  <xacro:property name="densidad_aluminio" value="2700.0"/>  <!-- kg/m3 -->
+
+  <!-- Componentes comerciales de la transmision. Masas aproximadas, a
+       confirmar al comprarlos. -->
+  <xacro:property name="polea_masa"  value="0.020"/>  <!-- polea dentada de aluminio -->
+  <xacro:property name="tuerca_masa" value="0.030"/>  <!-- tuerca de laton del husillo -->
 
   <!-- ================== Geometria de las piezas ==================== -->
-  <!-- Base: placa de MDF de 12 mm -->
-  <xacro:property name="base_x" value="0.200"/>
-  <xacro:property name="base_y" value="0.200"/>
+  <!-- Base: placa de MDF de 12 mm. Aloja los dos motores rotacionales. -->
+  <xacro:property name="base_x" value="0.220"/>
+  <xacro:property name="base_y" value="0.220"/>
   <xacro:property name="base_z" value="0.012"/>
 
-  <!-- Columna: tubo de PLA impreso -->
+  <!-- Columna: tubo que aloja el motor de theta1 -->
   <xacro:property name="columna_radio" value="0.030"/>
+
+  <!-- Posicion del motor de theta2 en la base, junto a la columna -->
+  <xacro:property name="motor2_offset" value="0.060"/>
 
   <!-- Eslabones del brazo: acrilico cortado por laser, 8 mm -->
   <xacro:property name="brazo_ancho"   value="0.050"/>
   <xacro:property name="brazo_espesor" value="0.008"/>
 
-  <!-- Eje vertical de la prismatica: varilla de PLA -->
-  <xacro:property name="eje_radio" value="0.010"/>
-
-  <!-- Efector final: micro servo Tower Pro 9 g mas mordaza impresa -->
-  <xacro:property name="gripper_x" value="0.040"/>
-  <xacro:property name="gripper_y" value="0.030"/>
-  <xacro:property name="gripper_z" value="0.035"/>
-  <xacro:property name="masa_servo" value="0.009"/>
+  <!-- Altura del efector alcanzable, derivada de la cadena vertical.
+       z_tool = altura_columna - brazo_espesor + husillo_largo
+                - vastago_largo - gripper_z - d3                         -->
+  <xacro:property name="z_tool_max"
+    value="${altura_columna - brazo_espesor + husillo_largo - vastago_largo - gripper_z}"/>
+  <xacro:property name="z_tool_min" value="${z_tool_max - carrera_d3}"/>
 
 </robot>

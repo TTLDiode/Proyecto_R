@@ -36,8 +36,11 @@ def main():
 
     l1, l2 = p['l1'], p['l2']
     lim_t1, lim_t2 = p['lim_theta1'], p['lim_theta2']
+    # Cadena vertical: el husillo va fijo al eslabon 2 y la tuerca desciende
+    # por el; el efector cuelga de un vastago sujeto a la tuerca.
     z_brazo = p['altura_columna'] - p['brazo_espesor']
-    z_tool = lambda d3: z_brazo - d3 - p['gripper_z']
+    z_husillo = z_brazo + p['husillo_largo']
+    z_tool = lambda d3: z_husillo - d3 - p['vastago_largo'] - p['gripper_z']
 
     # El codo limitado impide plegar la cadena por completo, de modo que el
     # radio minimo util es mayor que la diferencia de longitudes.
@@ -64,7 +67,8 @@ def main():
     print(f'  Anillo alcanzable: r de {r_min*1000:.0f} a {r_max*1000:.0f} mm')
     print(f'  Altura del efector: z de {z_tool(p["carrera_d3"])*1000:.0f} '
           f'a {z_tool(0)*1000:.0f} mm')
-    print(f'  Altura maxima de la estacion: {(z_brazo + p["carrera_d3"])*1000:.0f} mm')
+    print(f'  Altura maxima de la estacion: {z_husillo*1000:.0f} mm  '
+          f'(la fija el extremo del husillo, que no se mueve)')
     print()
     print(f'  {"Punto de tarea":<30}{"r (mm)":>8}{"theta1":>9}{"theta2":>9}{"d3 (mm)":>9}  ')
     print('  ' + '-'*68)
@@ -73,7 +77,7 @@ def main():
     for nombre, x, y, z in puntos:
         xr, yr = x - base['x'], y - base['y']
         r = math.hypot(xr, yr)
-        d3 = z_brazo - p['gripper_z'] - z
+        d3 = z_husillo - p['vastago_largo'] - p['gripper_z'] - z
         sol = None
         if r_min <= r <= r_max and 0.0 <= d3 <= p['carrera_d3']:
             c2 = (r*r - l1*l1 - l2*l2) / (2*l1*l2)
