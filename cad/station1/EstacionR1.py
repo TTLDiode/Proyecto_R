@@ -291,9 +291,11 @@ def run(context):
                              c['husillo_radio'], c['husillo_largo'])
         aplicar_material(app, design, husillo, 'ACERO', avisos)
 
+        # La tuerca cuelga del extremo del husillo sin sobresalir: el punto
+        # mas alto de la estacion debe ser el husillo, no ella.
         tuerca = caja(raiz, 'tuerca', x_husillo - c['tuerca_lado'] / 2.0,
                       -c['tuerca_lado'] / 2.0,
-                      z_top_husillo - c['tuerca_lado'] / 4.0,
+                      z_top_husillo - c['tuerca_lado'] / 2.0,
                       c['tuerca_lado'], c['tuerca_lado'], c['tuerca_lado'] / 2.0)
         aplicar_material(app, design, tuerca, 'ACERO', avisos)
 

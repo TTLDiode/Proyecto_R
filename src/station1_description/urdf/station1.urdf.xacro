@@ -248,8 +248,10 @@
   <xacro:property name="cz_link3"  value="${(tuerca_masa*0.0 + m_vastago*(-vastago_largo/2))/m_link3}"/>
 
   <link name="${p}link_3">
+    <!-- La tuerca cuelga del extremo del husillo, sin sobresalir por encima:
+         el punto mas alto de la estacion debe ser el husillo, no ella. -->
     <visual>
-      <origin xyz="0 0 0"/>
+      <origin xyz="0 0 ${-tuerca_lado/4}"/>
       <geometry><box size="${tuerca_lado} ${tuerca_lado} ${tuerca_lado/2}"/></geometry>
       <material name="metal"/>
     </visual>
