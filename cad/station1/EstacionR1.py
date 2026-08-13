@@ -14,7 +14,7 @@ articulaciones rompia la restriccion de altura y dejaba la mayor parte de la
 masa en voladizo:
 
     theta1  motor alojado dentro de la columna, accionamiento directo
-    theta2  motor en la base, correa dentada por dentro del eslabon 1
+    theta2  motor sobre el eslabon 1 y coaxial con theta1, correa al codo
     d3      motor vertical junto al codo, correa al husillo del extremo
 
 El eje vertical es un husillo fijo al eslabon 2 con la tuerca desplazandose
@@ -259,16 +259,19 @@ def run(context):
                         c['motor_diametro'] / 2.0, c['motor_largo'])
         aplicar_material(app, design, m1, 'ALUMINIO', avisos)
 
-        # Motor de theta2, en la base. Acciona el codo por correa.
-        m2 = cilindro_z(raiz, 'motor_theta2', c['motor2_offset'], 0.0,
-                        c['base_z'], c['motor_diametro'] / 2.0, c['motor_largo'])
-        aplicar_material(app, design, m2, 'ALUMINIO', avisos)
-
         # ---------------- Brazo ----------------
         link1 = caja(raiz, 'link_1', 0.0, -c['brazo_ancho'] / 2.0,
                      z_link1 - c['brazo_espesor'] / 2.0,
                      c['l1'], c['brazo_ancho'], c['brazo_espesor'])
         aplicar_material(app, design, link1, 'ACRILICO', avisos)
+
+        # Motor de theta2, sobre el eslabon 1 y coaxial con el eje de theta1.
+        # Asi la distancia a la polea del codo no cambia al girar el brazo, y
+        # su masa queda a radio cero del eje.
+        m2 = cilindro_z(raiz, 'motor_theta2', 0.0, 0.0,
+                        z_link1 + c['brazo_espesor'] / 2.0,
+                        c['motor_diametro'] / 2.0, c['motor_largo'])
+        aplicar_material(app, design, m2, 'ALUMINIO', avisos)
 
         link2 = caja(raiz, 'link_2', x_codo, -c['brazo_ancho'] / 2.0,
                      z_link2 - c['brazo_espesor'] / 2.0,

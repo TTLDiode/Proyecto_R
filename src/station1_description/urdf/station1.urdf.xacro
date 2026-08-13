@@ -12,7 +12,7 @@
   masa en voladizo:
 
     theta1  motor alojado dentro de la columna, accionamiento directo
-    theta2  motor en la base, correa dentada por dentro del eslabon 1
+    theta2  motor sobre el eslabon 1 y coaxial con theta1, correa al codo
     d3      motor en el codo, correa al husillo del extremo del eslabon 2
 
   Dos de los tres motores quedan fijos a la base y no cargan el brazo.
@@ -39,14 +39,14 @@
   <material name="motor">     <color rgba="0.20 0.20 0.22 1.0"/></material>
 
   <!-- ==================================================================
-       base_link: placa de MDF, columna y los dos motores rotacionales.
+       base_link: placa de MDF, columna y el motor de theta1 en su interior.
        Es un eslabon fijo al mundo, de modo que su inercia no interviene en
        la dinamica; se declara con la masa real para que el balance total de
        la estacion sea correcto.
   =================================================================== -->
   <xacro:property name="m_placa"   value="${densidad_mdf * base_x * base_y * base_z}"/>
   <xacro:property name="m_columna" value="${densidad_pla * pi * columna_radio * columna_radio * (altura_columna - base_z)}"/>
-  <xacro:property name="m_base"    value="${m_placa + m_columna + 2 * motor_masa}"/>
+  <xacro:property name="m_base"    value="${m_placa + m_columna + motor_masa}"/>
 
   <link name="${p}base_link">
     <visual>
@@ -59,14 +59,6 @@
       <geometry><cylinder radius="${columna_radio}" length="${altura_columna - base_z}"/></geometry>
       <material name="pla"/>
     </visual>
-    <!-- Motor de theta2, en la base junto a la columna. Acciona el codo por
-         correa; su masa nunca viaja con el brazo. -->
-    <visual>
-      <origin xyz="${motor2_offset} 0 ${base_z + motor_largo/2}"/>
-      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
-      <material name="motor"/>
-    </visual>
-
     <collision>
       <origin xyz="0 0 ${base_z/2}"/>
       <geometry><box size="${base_x} ${base_y} ${base_z}"/></geometry>
@@ -74,10 +66,6 @@
     <collision>
       <origin xyz="0 0 ${base_z + (altura_columna - base_z)/2}"/>
       <geometry><cylinder radius="${columna_radio}" length="${altura_columna - base_z}"/></geometry>
-    </collision>
-    <collision>
-      <origin xyz="${motor2_offset} 0 ${base_z + motor_largo/2}"/>
-      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
     </collision>
 
     <inertial>
@@ -101,9 +89,16 @@
     <dynamics damping="0.05" friction="0.01"/>
   </joint>
 
-  <!-- link_1: pletina de acrilico mas las dos poleas de la correa de theta2 -->
+  <!-- link_1: pletina de acrilico, las dos poleas de la correa de theta2 y el
+       propio motor de theta2, montado sobre el eje de giro. Al estar a radio
+       cero, su masa apenas contribuye a la inercia del eslabon. -->
   <xacro:property name="m_barra1" value="${densidad_acrilico * l1 * brazo_ancho * brazo_espesor}"/>
-  <xacro:property name="m_link1"  value="${m_barra1 + 2 * polea_masa}"/>
+  <xacro:property name="m_link1"  value="${m_barra1 + 2 * polea_masa + motor_masa}"/>
+  <xacro:property name="cz_motor1" value="${brazo_espesor/2 + motor_largo/2}"/>
+  <xacro:property name="cx_link1"
+    value="${(m_barra1*(l1/2) + 2*polea_masa*(l1/2)) / m_link1}"/>
+  <xacro:property name="cz_link1"
+    value="${motor_masa*cz_motor1 / m_link1}"/>
 
   <link name="${p}link_1">
     <visual>
@@ -115,15 +110,32 @@
       <origin xyz="${l1/2} 0 0"/>
       <geometry><box size="${l1} ${brazo_ancho} ${brazo_espesor}"/></geometry>
     </collision>
-    <!-- Las poleas van en los dos extremos, de modo que el centro de masa
-         del conjunto sigue estando a media longitud. -->
+    <visual>
+      <origin xyz="0 0 ${cz_motor1}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+      <material name="motor"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${cz_motor1}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+    </collision>
     <inertial>
-      <origin xyz="${l1/2} 0 0"/>
+      <origin xyz="${cx_link1} 0 ${cz_link1}"/>
       <mass value="${m_link1}"/>
       <inertia
-        ixx="${m_barra1*(brazo_ancho*brazo_ancho + brazo_espesor*brazo_espesor)/12.0}" ixy="0.0" ixz="0.0"
-        iyy="${m_barra1*(l1*l1 + brazo_espesor*brazo_espesor)/12.0 + 2*polea_masa*(l1/2)*(l1/2)}" iyz="0.0"
-        izz="${m_barra1*(l1*l1 + brazo_ancho*brazo_ancho)/12.0 + 2*polea_masa*(l1/2)*(l1/2)}"/>
+        ixx="${ m_barra1*(brazo_ancho*brazo_ancho + brazo_espesor*brazo_espesor)/12.0 + m_barra1*cz_link1*cz_link1
+              + motor_masa*(3*(motor_diametro/2)*(motor_diametro/2) + motor_largo*motor_largo)/12.0
+              + motor_masa*(cz_motor1-cz_link1)*(cz_motor1-cz_link1) }"
+        ixy="0.0"
+        ixz="${ -( m_barra1*(l1/2-cx_link1)*(-cz_link1) + motor_masa*(0-cx_link1)*(cz_motor1-cz_link1) ) }"
+        iyy="${ m_barra1*(l1*l1 + brazo_espesor*brazo_espesor)/12.0 + m_barra1*((l1/2-cx_link1)*(l1/2-cx_link1) + cz_link1*cz_link1)
+              + 2*polea_masa*(l1/2)*(l1/2)
+              + motor_masa*(3*(motor_diametro/2)*(motor_diametro/2) + motor_largo*motor_largo)/12.0
+              + motor_masa*(cx_link1*cx_link1 + (cz_motor1-cz_link1)*(cz_motor1-cz_link1)) }"
+        iyz="0.0"
+        izz="${ m_barra1*(l1*l1 + brazo_ancho*brazo_ancho)/12.0 + m_barra1*(l1/2-cx_link1)*(l1/2-cx_link1)
+              + 2*polea_masa*(l1/2)*(l1/2)
+              + motor_masa*(motor_diametro/2)*(motor_diametro/2)/2.0 + motor_masa*cx_link1*cx_link1 }"/>
     </inertial>
   </link>
 
