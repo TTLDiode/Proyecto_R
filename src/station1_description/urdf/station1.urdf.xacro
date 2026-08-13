@@ -139,16 +139,19 @@
   </joint>
 
   <!-- link_2: pletina, motor de d3 sobre el codo y husillo en el extremo.
-       Es el unico eslabon que carga un motor, y va en el codo y no en el
-       extremo para reducir su brazo respecto del eje de theta1. -->
+       Es el unico eslabon que carga un motor, y va junto al codo y no en el
+       extremo para reducir su brazo respecto del eje de theta1.
+       El motor va vertical, paralelo al husillo: una correa dentada exige
+       ejes paralelos. La distancia entre centros de las poleas es la que
+       separa el motor del husillo. -->
   <xacro:property name="m_barra2"   value="${densidad_acrilico * l2 * brazo_ancho * brazo_espesor}"/>
   <xacro:property name="m_husillo"  value="${densidad_acero * pi * husillo_radio * husillo_radio * husillo_largo}"/>
   <xacro:property name="m_link2"    value="${m_barra2 + motor_masa + m_husillo}"/>
 
   <!-- Posiciones de cada cuerpo dentro del eslabon -->
   <xacro:property name="cx_barra2"  value="${l2/2}"/>
-  <xacro:property name="cx_motor2"  value="${motor_largo/2 + 0.010}"/>
-  <xacro:property name="cz_motor2"  value="${brazo_espesor/2 + motor_diametro/2}"/>
+  <xacro:property name="cx_motor2"  value="${motor3_offset}"/>
+  <xacro:property name="cz_motor2"  value="${brazo_espesor/2 + motor_largo/2}"/>
   <xacro:property name="cx_husillo" value="${l2}"/>
   <xacro:property name="cz_husillo" value="${husillo_largo/2}"/>
 
@@ -173,7 +176,7 @@
       <material name="acrilico"/>
     </visual>
     <visual>
-      <origin xyz="${cx_motor2} 0 ${cz_motor2}" rpy="0 ${pi/2} 0"/>
+      <origin xyz="${cx_motor2} 0 ${cz_motor2}"/>
       <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
       <material name="motor"/>
     </visual>
@@ -188,7 +191,7 @@
       <geometry><box size="${l2} ${brazo_ancho} ${brazo_espesor}"/></geometry>
     </collision>
     <collision>
-      <origin xyz="${cx_motor2} 0 ${cz_motor2}" rpy="0 ${pi/2} 0"/>
+      <origin xyz="${cx_motor2} 0 ${cz_motor2}"/>
       <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
     </collision>
 
@@ -197,7 +200,7 @@
       <mass value="${m_link2}"/>
       <inertia
         ixx="${ m_barra2*(brazo_ancho*brazo_ancho + brazo_espesor*brazo_espesor)/12.0 + m_barra2*dz_b*dz_b
-              + motor_masa*(motor_diametro/2)*(motor_diametro/2)/2.0 + motor_masa*dz_m*dz_m
+              + motor_masa*(3*(motor_diametro/2)*(motor_diametro/2) + motor_largo*motor_largo)/12.0 + motor_masa*dz_m*dz_m
               + m_husillo*(3*husillo_radio*husillo_radio + husillo_largo*husillo_largo)/12.0 + m_husillo*dz_h*dz_h }"
         ixy="0.0"
         ixz="${ -(m_barra2*dx_b*dz_b + motor_masa*dx_m*dz_m + m_husillo*dx_h*dz_h) }"
@@ -206,7 +209,7 @@
               + m_husillo*(3*husillo_radio*husillo_radio + husillo_largo*husillo_largo)/12.0 + m_husillo*(dx_h*dx_h + dz_h*dz_h) }"
         iyz="0.0"
         izz="${ m_barra2*(l2*l2 + brazo_ancho*brazo_ancho)/12.0 + m_barra2*dx_b*dx_b
-              + motor_masa*(3*(motor_diametro/2)*(motor_diametro/2) + motor_largo*motor_largo)/12.0 + motor_masa*dx_m*dx_m
+              + motor_masa*(motor_diametro/2)*(motor_diametro/2)/2.0 + motor_masa*dx_m*dx_m
               + m_husillo*(husillo_radio*husillo_radio)/2.0 + m_husillo*dx_h*dx_h }"/>
     </inertial>
   </link>
