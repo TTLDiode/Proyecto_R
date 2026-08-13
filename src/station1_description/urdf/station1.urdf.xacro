@@ -6,9 +6,20 @@
 
   Responsable: Santiago Fernando Machado Sanchez
 
-  La geometria vive en parametros.xacro y las propiedades inerciales se derivan
-  de ella mediante las macros de inercias.xacro. Al sustituir las dimensiones
-  por las del CAD definitivo, masas e inercias se recalculan solas.
+  Arquitectura de transmision por correa. Los motores Pololu 37D pesan del
+  orden de 200 g y miden 37 mm de diametro, de modo que montarlos sobre las
+  articulaciones rompia la restriccion de altura y dejaba la mayor parte de la
+  masa en voladizo:
+
+    theta1  motor alojado dentro de la columna, accionamiento directo
+    theta2  motor en la base, correa dentada por dentro del eslabon 1
+    d3      motor en el codo, correa al husillo del extremo del eslabon 2
+
+  Dos de los tres motores quedan fijos a la base y no cargan el brazo.
+
+  El eje vertical es un husillo fijo al eslabon 2, con la tuerca desplazandose
+  sobre el; el efector cuelga de la tuerca mediante un vastago guiado. La
+  altura maxima de la estacion la fija el extremo del husillo, que no se mueve.
 
   Todos los frames llevan el prefijo de la estacion, segun ADR-005.
 -->
@@ -25,10 +36,18 @@
   <material name="mdf">       <color rgba="0.72 0.58 0.38 1.0"/></material>
   <material name="pla">       <color rgba="0.90 0.90 0.90 1.0"/></material>
   <material name="metal">     <color rgba="0.55 0.55 0.58 1.0"/></material>
+  <material name="motor">     <color rgba="0.20 0.20 0.22 1.0"/></material>
 
-  <!-- ==================== base_link ====================
-       Placa de MDF de 12 mm y columna de PLA. Es un eslabon fijo, de modo que
-       su inercia no interviene en la dinamica; se declara por completitud. -->
+  <!-- ==================================================================
+       base_link: placa de MDF, columna y los dos motores rotacionales.
+       Es un eslabon fijo al mundo, de modo que su inercia no interviene en
+       la dinamica; se declara con la masa real para que el balance total de
+       la estacion sea correcto.
+  =================================================================== -->
+  <xacro:property name="m_placa"   value="${densidad_mdf * base_x * base_y * base_z}"/>
+  <xacro:property name="m_columna" value="${densidad_pla * pi * columna_radio * columna_radio * (altura_columna - base_z)}"/>
+  <xacro:property name="m_base"    value="${m_placa + m_columna + 2 * motor_masa}"/>
+
   <link name="${p}base_link">
     <visual>
       <origin xyz="0 0 ${base_z/2}"/>
@@ -40,6 +59,14 @@
       <geometry><cylinder radius="${columna_radio}" length="${altura_columna - base_z}"/></geometry>
       <material name="pla"/>
     </visual>
+    <!-- Motor de theta2, en la base junto a la columna. Acciona el codo por
+         correa; su masa nunca viaja con el brazo. -->
+    <visual>
+      <origin xyz="${motor2_offset} 0 ${base_z + motor_largo/2}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+      <material name="motor"/>
+    </visual>
+
     <collision>
       <origin xyz="0 0 ${base_z/2}"/>
       <geometry><box size="${base_x} ${base_y} ${base_z}"/></geometry>
@@ -48,9 +75,19 @@
       <origin xyz="0 0 ${base_z + (altura_columna - base_z)/2}"/>
       <geometry><cylinder radius="${columna_radio}" length="${altura_columna - base_z}"/></geometry>
     </collision>
-    <xacro:inercia_caja x="${base_x}" y="${base_y}" z="${base_z}" densidad="${densidad_mdf}">
-      <origin xyz="0 0 ${base_z/2}"/>
-    </xacro:inercia_caja>
+    <collision>
+      <origin xyz="${motor2_offset} 0 ${base_z + motor_largo/2}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 ${altura_columna/3}"/>
+      <mass value="${m_base}"/>
+      <inertia
+        ixx="${m_base * (base_y*base_y + altura_columna*altura_columna) / 12.0}" ixy="0.0" ixz="0.0"
+        iyy="${m_base * (base_x*base_x + altura_columna*altura_columna) / 12.0}" iyz="0.0"
+        izz="${m_base * (base_x*base_x + base_y*base_y) / 12.0}"/>
+    </inertial>
   </link>
 
   <!-- ==================== theta1: rotacion de la base ==================== -->
@@ -64,6 +101,10 @@
     <dynamics damping="0.05" friction="0.01"/>
   </joint>
 
+  <!-- link_1: pletina de acrilico mas las dos poleas de la correa de theta2 -->
+  <xacro:property name="m_barra1" value="${densidad_acrilico * l1 * brazo_ancho * brazo_espesor}"/>
+  <xacro:property name="m_link1"  value="${m_barra1 + 2 * polea_masa}"/>
+
   <link name="${p}link_1">
     <visual>
       <origin xyz="${l1/2} 0 0"/>
@@ -74,13 +115,19 @@
       <origin xyz="${l1/2} 0 0"/>
       <geometry><box size="${l1} ${brazo_ancho} ${brazo_espesor}"/></geometry>
     </collision>
-    <xacro:inercia_caja x="${l1}" y="${brazo_ancho}" z="${brazo_espesor}"
-                        densidad="${densidad_acrilico}">
+    <!-- Las poleas van en los dos extremos, de modo que el centro de masa
+         del conjunto sigue estando a media longitud. -->
+    <inertial>
       <origin xyz="${l1/2} 0 0"/>
-    </xacro:inercia_caja>
+      <mass value="${m_link1}"/>
+      <inertia
+        ixx="${m_barra1*(brazo_ancho*brazo_ancho + brazo_espesor*brazo_espesor)/12.0}" ixy="0.0" ixz="0.0"
+        iyy="${m_barra1*(l1*l1 + brazo_espesor*brazo_espesor)/12.0 + 2*polea_masa*(l1/2)*(l1/2)}" iyz="0.0"
+        izz="${m_barra1*(l1*l1 + brazo_ancho*brazo_ancho)/12.0 + 2*polea_masa*(l1/2)*(l1/2)}"/>
+    </inertial>
   </link>
 
-  <!-- ==================== theta2: hombro ==================== -->
+  <!-- ==================== theta2: codo ==================== -->
   <joint name="${p}joint_2" type="revolute">
     <parent link="${p}link_1"/>
     <child  link="${p}link_2"/>
@@ -91,64 +138,148 @@
     <dynamics damping="0.05" friction="0.01"/>
   </joint>
 
+  <!-- link_2: pletina, motor de d3 sobre el codo y husillo en el extremo.
+       Es el unico eslabon que carga un motor, y va en el codo y no en el
+       extremo para reducir su brazo respecto del eje de theta1. -->
+  <xacro:property name="m_barra2"   value="${densidad_acrilico * l2 * brazo_ancho * brazo_espesor}"/>
+  <xacro:property name="m_husillo"  value="${densidad_acero * pi * husillo_radio * husillo_radio * husillo_largo}"/>
+  <xacro:property name="m_link2"    value="${m_barra2 + motor_masa + m_husillo}"/>
+
+  <!-- Posiciones de cada cuerpo dentro del eslabon -->
+  <xacro:property name="cx_barra2"  value="${l2/2}"/>
+  <xacro:property name="cx_motor2"  value="${motor_largo/2 + 0.010}"/>
+  <xacro:property name="cz_motor2"  value="${brazo_espesor/2 + motor_diametro/2}"/>
+  <xacro:property name="cx_husillo" value="${l2}"/>
+  <xacro:property name="cz_husillo" value="${husillo_largo/2}"/>
+
+  <!-- Centro de masa del conjunto -->
+  <xacro:property name="cx_link2"
+    value="${(m_barra2*cx_barra2 + motor_masa*cx_motor2 + m_husillo*cx_husillo)/m_link2}"/>
+  <xacro:property name="cz_link2"
+    value="${(motor_masa*cz_motor2 + m_husillo*cz_husillo)/m_link2}"/>
+
+  <!-- Desplazamientos respecto del centro de masa, para el teorema de Steiner -->
+  <xacro:property name="dx_b" value="${cx_barra2 - cx_link2}"/>
+  <xacro:property name="dz_b" value="${-cz_link2}"/>
+  <xacro:property name="dx_m" value="${cx_motor2 - cx_link2}"/>
+  <xacro:property name="dz_m" value="${cz_motor2 - cz_link2}"/>
+  <xacro:property name="dx_h" value="${cx_husillo - cx_link2}"/>
+  <xacro:property name="dz_h" value="${cz_husillo - cz_link2}"/>
+
   <link name="${p}link_2">
     <visual>
       <origin xyz="${l2/2} 0 0"/>
       <geometry><box size="${l2} ${brazo_ancho} ${brazo_espesor}"/></geometry>
       <material name="acrilico"/>
     </visual>
+    <visual>
+      <origin xyz="${cx_motor2} 0 ${cz_motor2}" rpy="0 ${pi/2} 0"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+      <material name="motor"/>
+    </visual>
+    <visual>
+      <origin xyz="${l2} 0 ${husillo_largo/2}"/>
+      <geometry><cylinder radius="${husillo_radio}" length="${husillo_largo}"/></geometry>
+      <material name="metal"/>
+    </visual>
+
     <collision>
       <origin xyz="${l2/2} 0 0"/>
       <geometry><box size="${l2} ${brazo_ancho} ${brazo_espesor}"/></geometry>
     </collision>
-    <xacro:inercia_caja x="${l2}" y="${brazo_ancho}" z="${brazo_espesor}"
-                        densidad="${densidad_acrilico}">
-      <origin xyz="${l2/2} 0 0"/>
-    </xacro:inercia_caja>
+    <collision>
+      <origin xyz="${cx_motor2} 0 ${cz_motor2}" rpy="0 ${pi/2} 0"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="${cx_link2} 0 ${cz_link2}"/>
+      <mass value="${m_link2}"/>
+      <inertia
+        ixx="${ m_barra2*(brazo_ancho*brazo_ancho + brazo_espesor*brazo_espesor)/12.0 + m_barra2*dz_b*dz_b
+              + motor_masa*(motor_diametro/2)*(motor_diametro/2)/2.0 + motor_masa*dz_m*dz_m
+              + m_husillo*(3*husillo_radio*husillo_radio + husillo_largo*husillo_largo)/12.0 + m_husillo*dz_h*dz_h }"
+        ixy="0.0"
+        ixz="${ -(m_barra2*dx_b*dz_b + motor_masa*dx_m*dz_m + m_husillo*dx_h*dz_h) }"
+        iyy="${ m_barra2*(l2*l2 + brazo_espesor*brazo_espesor)/12.0 + m_barra2*(dx_b*dx_b + dz_b*dz_b)
+              + motor_masa*(3*(motor_diametro/2)*(motor_diametro/2) + motor_largo*motor_largo)/12.0 + motor_masa*(dx_m*dx_m + dz_m*dz_m)
+              + m_husillo*(3*husillo_radio*husillo_radio + husillo_largo*husillo_largo)/12.0 + m_husillo*(dx_h*dx_h + dz_h*dz_h) }"
+        iyz="0.0"
+        izz="${ m_barra2*(l2*l2 + brazo_ancho*brazo_ancho)/12.0 + m_barra2*dx_b*dx_b
+              + motor_masa*(3*(motor_diametro/2)*(motor_diametro/2) + motor_largo*motor_largo)/12.0 + motor_masa*dx_m*dx_m
+              + m_husillo*(husillo_radio*husillo_radio)/2.0 + m_husillo*dx_h*dx_h }"/>
+    </inertial>
   </link>
 
   <!-- ==================== d3: desplazamiento vertical ====================
-       Accionada por husillo. El eje asciende por encima del brazo cuando el
-       efector desciende, de ahi que la altura maxima de la estacion sea la
-       suma de la columna y la carrera. -->
+       La tuerca recorre el husillo. El origen de la articulacion esta en el
+       extremo superior del husillo y el desplazamiento es descendente, de modo
+       que d3 = 0 corresponde al efector arriba. -->
   <joint name="${p}joint_3" type="prismatic">
     <parent link="${p}link_2"/>
     <child  link="${p}link_3"/>
-    <origin xyz="${l2} 0 0"/>
+    <origin xyz="${l2} 0 ${husillo_largo}"/>
     <axis xyz="0 0 -1"/>
     <limit lower="0.0" upper="${carrera_d3}"
            velocity="${vel_pris}" effort="${esfuerzo_pris}"/>
     <dynamics damping="2.0" friction="0.5"/>
   </joint>
 
+  <!-- link_3: tuerca del husillo y vastago que sostiene el efector -->
+  <xacro:property name="m_vastago" value="${densidad_aluminio * pi * vastago_radio * vastago_radio * vastago_largo}"/>
+  <xacro:property name="m_link3"   value="${tuerca_masa + m_vastago}"/>
+  <xacro:property name="cz_link3"  value="${(tuerca_masa*0.0 + m_vastago*(-vastago_largo/2))/m_link3}"/>
+
   <link name="${p}link_3">
     <visual>
-      <origin xyz="0 0 ${carrera_d3/2}"/>
-      <geometry><cylinder radius="${eje_radio}" length="${carrera_d3}"/></geometry>
+      <origin xyz="0 0 0"/>
+      <geometry><box size="${tuerca_lado} ${tuerca_lado} ${tuerca_lado/2}"/></geometry>
+      <material name="metal"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${-vastago_largo/2}"/>
+      <geometry><cylinder radius="${vastago_radio}" length="${vastago_largo}"/></geometry>
       <material name="metal"/>
     </visual>
     <collision>
-      <origin xyz="0 0 ${carrera_d3/2}"/>
-      <geometry><cylinder radius="${eje_radio}" length="${carrera_d3}"/></geometry>
+      <origin xyz="0 0 ${-vastago_largo/2}"/>
+      <geometry><cylinder radius="${vastago_radio}" length="${vastago_largo}"/></geometry>
     </collision>
-    <xacro:inercia_cilindro radio="${eje_radio}" longitud="${carrera_d3}"
-                            densidad="${densidad_pla}">
-      <origin xyz="0 0 ${carrera_d3/2}"/>
-    </xacro:inercia_cilindro>
+    <inertial>
+      <origin xyz="0 0 ${cz_link3}"/>
+      <mass value="${m_link3}"/>
+      <inertia
+        ixx="${ tuerca_masa*(tuerca_lado*tuerca_lado + (tuerca_lado/2)*(tuerca_lado/2))/12.0 + tuerca_masa*cz_link3*cz_link3
+              + m_vastago*(3*vastago_radio*vastago_radio + vastago_largo*vastago_largo)/12.0
+              + m_vastago*(vastago_largo/2 + cz_link3)*(vastago_largo/2 + cz_link3) }"
+        ixy="0.0" ixz="0.0"
+        iyy="${ tuerca_masa*(tuerca_lado*tuerca_lado + (tuerca_lado/2)*(tuerca_lado/2))/12.0 + tuerca_masa*cz_link3*cz_link3
+              + m_vastago*(3*vastago_radio*vastago_radio + vastago_largo*vastago_largo)/12.0
+              + m_vastago*(vastago_largo/2 + cz_link3)*(vastago_largo/2 + cz_link3) }" iyz="0.0"
+        izz="${ tuerca_masa*(2*tuerca_lado*tuerca_lado)/12.0 + m_vastago*vastago_radio*vastago_radio/2.0 }"/>
+    </inertial>
   </link>
 
   <!-- ==================== Efector final ====================
        Micro servo Tower Pro 9 g con mordaza impresa. No cuenta como grado de
        libertad: los tres GDL son los tres motores DC. -->
+  <xacro:property name="m_mordaza" value="${densidad_pla * gripper_x * gripper_y * gripper_z * 0.35}"/>
+  <xacro:property name="m_gripper" value="${masa_servo + m_mordaza}"/>
+
   <joint name="${p}gripper_joint" type="revolute">
     <parent link="${p}link_3"/>
     <child  link="${p}gripper_link"/>
-    <origin xyz="0 0 0"/>
+    <origin xyz="0 0 ${-vastago_largo}"/>
     <axis xyz="1 0 0"/>
     <limit lower="0.0" upper="${lim_gripper}" velocity="3.0" effort="0.15"/>
   </joint>
 
   <link name="${p}gripper_link">
+    <visual>
+      <origin xyz="0 0 ${-servo_z/2}"/>
+      <geometry><box size="${servo_x} ${servo_y} ${servo_z}"/></geometry>
+      <material name="motor"/>
+    </visual>
     <visual>
       <origin xyz="0 0 ${-gripper_z/2}"/>
       <geometry><box size="${gripper_x} ${gripper_y} ${gripper_z}"/></geometry>
@@ -158,7 +289,7 @@
       <origin xyz="0 0 ${-gripper_z/2}"/>
       <geometry><box size="${gripper_x} ${gripper_y} ${gripper_z}"/></geometry>
     </collision>
-    <xacro:inercia_componente masa="${masa_servo}"
+    <xacro:inercia_componente masa="${m_gripper}"
                               x="${gripper_x}" y="${gripper_y}" z="${gripper_z}">
       <origin xyz="0 0 ${-gripper_z/2}"/>
     </xacro:inercia_componente>
