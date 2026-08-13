@@ -57,28 +57,42 @@
        Motor Pololu de 200 RPM: 200 * 2*pi / 60 = 20.944 rad/s en el eje de
        salida. La transmision por correa es de relacion 1:1, de modo que la
        articulacion gira a la misma velocidad. -->
+  <xacro:property name="avance_husillo" value="0.008"/>
   <xacro:property name="relacion_correa" value="1.0"/>
   <xacro:property name="vel_rot" value="${20.944 / relacion_correa}"/>
 
   <!-- Velocidad de la articulacion prismatica. Husillo T8 de 8 mm de
        avance por vuelta: 200/60 rev/s * 0.008 m = 0.0267 m/s. -->
-  <xacro:property name="avance_husillo" value="0.008"/>
   <xacro:property name="vel_pris" value="0.0267"/>
 
-  <!-- PROVISIONAL. El par disponible debe tomarse de la hoja de datos del
-       motor y contrastarse con el par requerido por cada articulacion. -->
-  <xacro:property name="esfuerzo_rot"  value="0.50"/>   <!-- N.m  -->
-  <xacro:property name="esfuerzo_pris" value="20.0"/>   <!-- N    -->
+  <!-- Limites de esfuerzo, de la hoja de datos del 37D rev 1.2.
+       El motor admite 100 kg.mm en continuo, es decir 0.981 N.m, pero a ese
+       par consume 2.72 A y el driver TB6612FNG solo entrega 1.2 A continuos
+       por canal. Manda el driver: a 1.2 A el motor entrega 39.6 kg.mm.
+       El limite del modelo es por tanto el del sistema, no el del motor. -->
+  <xacro:property name="par_motor_continuo" value="0.981"/>  <!-- 100 kg.mm -->
+  <xacro:property name="par_motor_bloqueo"  value="2.059"/>  <!-- 210 kg.mm -->
+  <xacro:property name="esfuerzo_rot"       value="0.389"/>  <!-- limitado por el driver -->
+
+  <!-- Husillo T8: F = 2*pi*rendimiento*par/avance. Rendimiento 0.2, extremo
+       conservador de un husillo trapezoidal sin recirculacion de bolas. -->
+  <xacro:property name="rendimiento_husillo" value="0.2"/>
+  <xacro:property name="esfuerzo_pris"
+    value="${2 * pi * rendimiento_husillo * esfuerzo_rot / avance_husillo}"/>
 
   <!-- ================== Actuadores ================================
-       Envolvente medida sobre Gearmotor_37D_100.stp, que es la version con
-       reductora: 94.6 mm de largo total y 36.8 mm de diametro de cuerpo. La
-       masa procede de la hoja de datos de Pololu y queda por confirmar contra
-       la referencia exacta que entregue el laboratorio.
+       Pololu 37D 50:1 con encoder, item #4753, que a 12 V gira a 200 RPM sin
+       carga. Datos de la hoja de datos rev 1.2:
+         cuerpo de 36.8 mm de diametro y 92.1 mm de largo total
+         masa de 190 a 210 g; se toma el extremo superior
+         eje de salida de 6 mm y seis roscas M3 en circulo de 31 mm,
+         roscadas a 3 mm de profundidad como maximo
+       El modelo CAD descargado, Gearmotor_37D_100.stp, corresponde a la
+       version 100:1 y mide 94.6 mm: su reductora es 2.5 mm mas larga.
   -->
   <xacro:property name="motor_diametro" value="0.037"/>
-  <xacro:property name="motor_largo"    value="0.095"/>
-  <xacro:property name="motor_masa"     value="0.200"/>
+  <xacro:property name="motor_largo"    value="0.0921"/>
+  <xacro:property name="motor_masa"     value="0.210"/>
 
   <!-- Interfaz mecanica del motor, medida sobre Gearmotor_37D_100.stp.
        Condiciona el diseno de las poleas, del acoplamiento al husillo y de
