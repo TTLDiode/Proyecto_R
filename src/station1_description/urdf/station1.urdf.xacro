@@ -45,7 +45,7 @@
        la estacion sea correcto.
   =================================================================== -->
   <xacro:property name="m_placa"   value="${densidad_mdf * base_x * base_y * base_z}"/>
-  <xacro:property name="m_columna" value="${densidad_pla * pi * columna_radio * columna_radio * (altura_columna - base_z)}"/>
+  <xacro:property name="m_columna" value="${densidad_pla * pi * columna_radio * columna_radio * (altura_columna - brazo_espesor/2 - base_z)}"/>
   <xacro:property name="m_base"    value="${m_placa + m_columna + motor_masa}"/>
 
   <link name="${p}base_link">
@@ -54,9 +54,11 @@
       <geometry><box size="${base_x} ${base_y} ${base_z}"/></geometry>
       <material name="mdf"/>
     </visual>
+    <!-- La columna termina en la cara inferior del eslabon 1, que es donde
+         apoya el rodamiento de theta1. -->
     <visual>
-      <origin xyz="0 0 ${base_z + (altura_columna - base_z)/2}"/>
-      <geometry><cylinder radius="${columna_radio}" length="${altura_columna - base_z}"/></geometry>
+      <origin xyz="0 0 ${base_z + (altura_columna - brazo_espesor/2 - base_z)/2}"/>
+      <geometry><cylinder radius="${columna_radio}" length="${altura_columna - brazo_espesor/2 - base_z}"/></geometry>
       <material name="pla"/>
     </visual>
     <collision>
@@ -64,8 +66,8 @@
       <geometry><box size="${base_x} ${base_y} ${base_z}"/></geometry>
     </collision>
     <collision>
-      <origin xyz="0 0 ${base_z + (altura_columna - base_z)/2}"/>
-      <geometry><cylinder radius="${columna_radio}" length="${altura_columna - base_z}"/></geometry>
+      <origin xyz="0 0 ${base_z + (altura_columna - brazo_espesor/2 - base_z)/2}"/>
+      <geometry><cylinder radius="${columna_radio}" length="${altura_columna - brazo_espesor/2 - base_z}"/></geometry>
     </collision>
 
     <inertial>
