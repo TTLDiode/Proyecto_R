@@ -28,6 +28,13 @@
   <xacro:include filename="$(find station1_description)/urdf/parametros.xacro"/>
   <xacro:include filename="$(find station1_description)/urdf/inercias.xacro"/>
   <xacro:include filename="$(find station1_description)/urdf/station1.gazebo.xacro"/>
+  <xacro:include filename="$(find station1_description)/urdf/station1.ros2_control.xacro"/>
+
+  <!-- Con control:=false el modelo se puede abrir en RViz sin levantar el
+       controller_manager, que es como se reviso el arbol TF en la Entrega 1. -->
+  <xacro:arg name="control" default="true"/>
+  <xacro:arg name="controladores"
+             default="$(find station1_description)/config/station1_controllers.yaml"/>
 
   <material name="acrilico">  <color rgba="0.35 0.55 0.75 0.75"/></material>
   <material name="mdf">       <color rgba="0.72 0.58 0.38 1.0"/></material>
@@ -285,7 +292,22 @@
     <axis xyz="0 0 -1"/>
     <limit lower="0.0" upper="${carrera_d3}"
            velocity="${vel_pris}" effort="${esfuerzo_pris}"/>
-    <dynamics damping="2.0" friction="0.5"/>
+    <!-- La friccion no es un numero de relleno: es lo que hace del eje un eje
+         autoblocante. El husillo trabaja con un rendimiento directo de 0.2, y
+         un husillo por debajo de 0.5 no se puede retroaccionar: el carro no
+         baja solo aunque se corte la corriente. Con 0.5 N, por debajo de los
+         2.17 N que pesa el conjunto, se describia justo lo contrario, un eje
+         que se descuelga. Con 4.0 N, por encima del peso, el eje se sostiene
+         solo y al actuador le quedan 61 N para moverlo.
+
+         Aviso para no atribuirle lo que no hace: este cambio NO es lo que
+         arreglo el error de seguimiento de la prismatica al descender. Ese
+         error resulto depender de la velocidad pedida, no de la gravedad, y se
+         corrigio planificando al 70 % del limite de velocidad; la medida esta
+         en station1_control/trayectoria.py. La gravedad si explica que
+         bajando el error sea unas diez veces mayor que subiendo a igualdad de
+         velocidad, pero no el fenomeno principal. -->
+    <dynamics damping="2.0" friction="4.0"/>
   </joint>
 
   <!-- ==================================================================
@@ -372,14 +394,47 @@
     </xacro:inercia_componente>
   </link>
 
-  <!-- Punto de referencia del efector, donde se sujeta la pieza. -->
+  <!-- Punto de referencia del efector, donde se sujeta la pieza.
+       Cuelga del carro y no de la mordaza: tool0 es un sistema fijo del
+       brazo, y si girase con el servo el punto de trabajo se desplazaria
+       16.8 mm al abrir la pinza y el grupo de planificacion pasaria a tener
+       cuatro articulaciones en lugar de los tres grados de libertad que pide
+       la guia. Con la mordaza cerrada la pose es identica a la de la
+       Entrega 1. -->
   <joint name="${p}tool0_joint" type="fixed">
-    <parent link="${p}gripper_link"/>
+    <parent link="${p}link_3"/>
     <child  link="${p}tool0"/>
-    <origin xyz="0 0 ${-gripper_z}"/>
+    <origin xyz="0 0 ${-(vastago_largo + gripper_z)}"/>
   </joint>
   <link name="${p}tool0"/>
 
   <xacro:station1_gazebo prefijo="${p}"/>
+
+  <!-- ==================================================================
+       Acople cinematico de la pieza, segun ADR-002.
+
+       No acopla al arrancar. El nodo de la estacion pide el acople cuando
+       cierra la mordaza sobre la pieza y lo deshace antes de abrirla.
+  =================================================================== -->
+  <xacro:arg name="acople" default="true"/>
+  <xacro:arg name="pieza" default="pieza"/>
+  <xacro:if value="$(arg acople)">
+    <gazebo>
+      <plugin filename="gz-sim-detachable-joint-system"
+              name="gz::sim::systems::DetachableJoint">
+        <parent_link>${p}gripper_link</parent_link>
+        <child_model>$(arg pieza)</child_model>
+        <child_link>cuerpo</child_link>
+        <attach_topic>/station1/pieza/attach</attach_topic>
+        <detach_topic>/station1/pieza/detach</detach_topic>
+        <suppress_child_warning>true</suppress_child_warning>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+  <xacro:if value="$(arg control)">
+    <xacro:station1_ros2_control prefijo="${p}"
+                                 controladores="$(arg controladores)"/>
+  </xacro:if>
 
 </robot>

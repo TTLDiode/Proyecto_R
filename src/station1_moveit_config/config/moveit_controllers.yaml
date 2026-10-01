@@ -1,0 +1,26 @@
+# Como habla MoveIt con los controladores que ya corren dentro de Gazebo.
+# Los nombres tienen que coincidir exactamente con los de
+# station1_description/config/station1_controllers.yaml: MoveIt no los crea,
+# solo les manda trayectorias por la accion FollowJointTrajectory.
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+
+moveit_simple_controller_manager:
+  controller_names:
+    - brazo_controller
+    - mordaza_controller
+
+  brazo_controller:
+    type: FollowJointTrajectory
+    action_ns: follow_joint_trajectory
+    default: true
+    joints:
+      - station1/joint_1
+      - station1/joint_2
+      - station1/joint_3
+
+  mordaza_controller:
+    type: FollowJointTrajectory
+    action_ns: follow_joint_trajectory
+    default: true
+    joints:
+      - station1/gripper_joint

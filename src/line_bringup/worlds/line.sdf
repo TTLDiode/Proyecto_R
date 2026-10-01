@@ -40,5 +40,166 @@
       </link>
     </model>
 
+
+    <!-- ================================================================
+         Bandeja de entrada de la Estacion 1.
+
+         Cara superior en z = 0.032. Con una pieza de 12 mm apoyada encima,
+         su centro queda en 0.038 y su cara alta en 0.044, 6 mm por debajo del
+         efector cuando este baja al punto de tarea. Las dimensiones en planta
+         son las de input_tray en line_poses.yaml.
+    ================================================================= -->
+    <model name="bandeja_e1">
+      <static>true</static>
+      <pose>-0.180 0.100 0.016 0 0 0</pose>
+      <link name="superficie">
+        <collision name="collision">
+          <geometry><box><size>0.100 0.100 0.032</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.100 0.100 0.032</size></box></geometry>
+          <material>
+            <ambient>0.72 0.58 0.38 1</ambient>
+            <diffuse>0.72 0.58 0.38 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================================================================
+         Soporte del punto de traspaso a la Estacion 2.
+
+         Cara superior en z = 0.042, de modo que la pieza depositada queda
+         con su centro en 0.048 y el efector en 0.060, la cota de handoff_1_2.
+         Es el punto fijo de referencia que la guia exige entre las dos
+         estaciones.
+    ================================================================= -->
+    <model name="soporte_traspaso_1_2">
+      <static>true</static>
+      <pose>0.250 0.000 0.021 0 0 0</pose>
+      <link name="superficie">
+        <collision name="collision">
+          <geometry><box><size>0.060 0.060 0.042</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.060 0.060 0.042</size></box></geometry>
+          <material>
+            <ambient>0.35 0.40 0.45 1</ambient>
+            <diffuse>0.35 0.40 0.45 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================================================================
+         La pieza. Un componente electronico de 20 x 20 x 12 mm y 20 g.
+
+         El rozamiento alto no es lo que la sujeta: la retencion la hace el
+         acople cinematico de ADR-002. Esta aqui para que la pieza no resbale
+         sobre la bandeja ni sobre el soporte una vez depositada.
+    ================================================================= -->
+    <model name="pieza">
+      <pose>-0.180 0.100 0.038 0 0 0</pose>
+      <link name="cuerpo">
+        <inertial>
+          <mass>0.0200</mass>
+          <inertia>
+            <ixx>9.067e-07</ixx><iyy>9.067e-07</iyy><izz>1.333e-06</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.020 0.020 0.012</size></box></geometry>
+          <surface>
+            <friction><ode><mu>0.9</mu><mu2>0.9</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.020 0.020 0.012</size></box></geometry>
+          <material>
+            <ambient>0.80 0.15 0.15 1</ambient>
+            <diffuse>0.80 0.15 0.15 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <gui fullscreen="1">
+      <plugin filename="MinimalScene" name="3D View">
+        <gz-gui>
+          <title>3D View</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <ambient_light>0.4 0.4 0.4</ambient_light>
+        <background_color>0.85 0.87 0.90</background_color>
+        <camera_pose>0.30 -0.38 0.30 0 0.410 2.159</camera_pose>
+      </plugin>
+      <plugin filename="GzSceneManager" name="Scene Manager">
+        <gz-gui><property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="state" type="string">floating</property></gz-gui>
+      </plugin>
+      <plugin filename="InteractiveViewControl" name="Interactive view control">
+        <gz-gui><property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="state" type="string">floating</property></gz-gui>
+      </plugin>
+      <plugin filename="CameraTracking" name="Camera Tracking">
+        <gz-gui><property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="state" type="string">floating</property></gz-gui>
+      </plugin>
+      <plugin filename="WorldControl" name="World control">
+        <gz-gui>
+          <title>World control</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">floating</property>
+          <property type="double" key="height">72</property>
+          <property type="double" key="width">121</property>
+          <property type="double" key="z">1</property>
+          <anchors target="3D View">
+            <line own="left" target="left"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+        <play_pause>true</play_pause>
+        <step>true</step>
+        <start_paused>false</start_paused>
+      </plugin>
+      <plugin filename="WorldStats" name="World stats">
+        <gz-gui>
+          <title>World stats</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">floating</property>
+          <property type="double" key="height">110</property>
+          <property type="double" key="width">290</property>
+          <property type="double" key="z">1</property>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+        <sim_time>true</sim_time>
+        <real_time>true</real_time>
+        <real_time_factor>true</real_time_factor>
+      </plugin>
+      <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
+        <gz-gui><property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+          <property key="state" type="string">floating</property></gz-gui>
+      </plugin>
+    </gui>
+
   </world>
 </sdf>

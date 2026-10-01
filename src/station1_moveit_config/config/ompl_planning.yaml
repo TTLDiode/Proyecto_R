@@ -1,0 +1,39 @@
+# Planificadores disponibles. Se deja RRTConnect por defecto: es el unico de
+# los bidireccionales que resuelve de forma fiable en un espacio de tres
+# dimensiones con obstaculos escasos, y aqui el problema es casi siempre
+# trivial porque la estacion trabaja en un volumen despejado.
+planning_plugins:
+  - ompl_interface/OMPLPlanner
+
+request_adapters:
+  - default_planning_request_adapters/ResolveConstraintFrames
+  - default_planning_request_adapters/ValidateWorkspaceBounds
+  - default_planning_request_adapters/CheckStartStateBounds
+  - default_planning_request_adapters/CheckStartStateCollision
+
+response_adapters:
+  - default_planning_response_adapters/AddTimeOptimalParameterization
+  - default_planning_response_adapters/ValidateSolution
+  - default_planning_response_adapters/DisplayMotionPath
+
+planner_configs:
+  RRTConnect:
+    type: geometric::RRTConnect
+    range: 0.0
+  RRTstar:
+    type: geometric::RRTstar
+    range: 0.0
+    delay_collision_checking: 1
+
+brazo:
+  planner_configs:
+    - RRTConnect
+    - RRTstar
+  default_planner_config: RRTConnect
+  projection_evaluator: joints(station1/joint_1,station1/joint_2)
+  longest_valid_segment_fraction: 0.005
+
+mordaza:
+  planner_configs:
+    - RRTConnect
+  default_planner_config: RRTConnect

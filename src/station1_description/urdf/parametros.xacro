@@ -36,8 +36,13 @@
 
   <!-- ================== Restricciones de la guia ================== -->
   <!-- Envolvente de trabajo en el plano XY: radio 320 mm +/- 20 mm.   -->
-  <!-- Envolvente en el plano YZ: 300 mm +/- 20 mm, interpretado como  -->
-  <!-- la altura total de la estacion. Confirmar con el profesor.      -->
+  <!-- Envolvente en el plano YZ: la guia lo enuncia como 300 mm +/- 20, -->
+  <!-- es decir de 280 a 320, y se lee como la altura total. El profesor  -->
+  <!-- aclaro el 16/08/2026 que admitia leerse como 320 +/- 20, pero se   -->
+  <!-- dimensiono con el criterio escrito, que es el mas estricto de los  -->
+  <!-- dos, de modo que cumple bajo cualquiera de las dos lecturas.       -->
+  <!-- La estacion mide 307, con el extremo del husillo como punto mas    -->
+  <!-- alto: quedan 13 mm de margen bajo el techo de 320.                 -->
   <xacro:property name="alcance_xy"      value="0.320"/>
   <xacro:property name="altura_estacion" value="0.307"/>
 

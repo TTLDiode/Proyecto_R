@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<!--
+  Descripcion semantica de la Estacion 1.
+
+  El URDF dice como es la maquina; este archivo dice como se usa: que
+  articulaciones forman el brazo que se planifica, cual es el punto que se
+  lleva a la pose objetivo y que pares de eslabones no hace falta comprobar
+  por colision.
+
+  Escrito a mano y no con el Setup Assistant. El asistente es una herramienta
+  grafica y la caja de simulacion corre sin escritorio; ademas, para una
+  cadena de tres articulaciones el archivo que genera es mas largo que este y
+  sus pares de colision "por defecto" salen de un muestreo aleatorio que aqui
+  se puede razonar exactamente.
+
+  El grupo del brazo son los tres motores DC. El servo de la mordaza queda en
+  su propio grupo: la guia pide tres grados de libertad y el gripper no es uno
+  de ellos, de modo que el planificador no debe verlo nunca.
+-->
+<robot name="station1">
+
+  <!-- ==================== Grupos ==================== -->
+  <!-- Cadena completa desde el anclaje hasta el punto de trabajo. Se declara
+       como cadena, no como lista de articulaciones, porque los solucionadores
+       cinematicos de MoveIt solo aceptan cadenas. -->
+  <group name="brazo">
+    <chain base_link="station1/base_link" tip_link="station1/tool0"/>
+  </group>
+
+  <group name="mordaza">
+    <joint name="station1/gripper_joint"/>
+  </group>
+
+  <!-- ==================== Poses con nombre ====================
+       home     la que deja el homing: theta1 contra su final de carrera a 180
+                grados y el codo replegado, retrocedido 5 grados del tope.
+       reposo   posicion de espera entre ciclos, fuera de la bandeja y fuera
+                del punto de traspaso.
+       bandeja  sobre el centro de la bandeja de entrada, con la prismatica
+                arriba: es el punto desde el que empieza cada descenso.
+       traspaso sobre el punto de entrega a la Estacion 2.
+
+       Los valores articulares de bandeja y traspaso no estan inventados:
+       salen de la cinematica inversa propia, matlab/station1/e1_inversa.m,
+       evaluada en las coordenadas de line_bringup/config/line_poses.yaml.
+  -->
+  <group_state name="home" group="brazo">
+    <joint name="station1/joint_1" value="3.1416"/>
+    <joint name="station1/joint_2" value="2.2687"/>
+    <joint name="station1/joint_3" value="0.0"/>
+  </group_state>
+
+  <group_state name="reposo" group="brazo">
+    <joint name="station1/joint_1" value="1.5708"/>
+    <joint name="station1/joint_2" value="1.5708"/>
+    <joint name="station1/joint_3" value="0.0"/>
+  </group_state>
+
+  <group_state name="bandeja" group="brazo">
+    <joint name="station1/joint_1" value="1.9042"/>
+    <joint name="station1/joint_2" value="1.7625"/>
+    <joint name="station1/joint_3" value="0.0"/>
+  </group_state>
+
+  <group_state name="traspaso" group="brazo">
+    <joint name="station1/joint_1" value="0.5794"/>
+    <joint name="station1/joint_2" value="-1.3613"/>
+    <joint name="station1/joint_3" value="0.0"/>
+  </group_state>
+
+  <group_state name="abierta" group="mordaza">
+    <joint name="station1/gripper_joint" value="0.5"/>
+  </group_state>
+
+  <group_state name="cerrada" group="mordaza">
+    <joint name="station1/gripper_joint" value="0.0"/>
+  </group_state>
+
+  <!-- ==================== Efector final ====================
+       Declarar la mordaza como efector del brazo es lo que permite que una
+       pieza agarrada viaje con el en la escena de planificacion. -->
+  <end_effector name="efector" parent_link="station1/tool0"
+                group="mordaza" parent_group="brazo"/>
+
+  <!-- ==================== Colisiones que no hay que comprobar ====================
+       Adjacent: eslabones unidos por una articulacion. Su contacto es
+       permanente por construccion y comprobarlo solo produce falsos positivos.
+
+       base_link con link_2 y link_3 no se declara: el codo puede plegarse
+       hasta 135 grados y acercar el eslabon 2 a la columna, que es
+       precisamente una colision real que interesa detectar.
+  -->
+  <disable_collisions link1="station1/base_link" link2="station1/link_1"
+                      reason="Adjacent"/>
+  <disable_collisions link1="station1/link_1" link2="station1/link_2"
+                      reason="Adjacent"/>
+  <disable_collisions link1="station1/link_2" link2="station1/link_3"
+                      reason="Adjacent"/>
+  <disable_collisions link1="station1/link_3" link2="station1/gripper_link"
+                      reason="Adjacent"/>
+  <!-- El carro cuelga del eslabon 2 y la mordaza va colgada del carro: con la
+       prismatica arriba la mordaza queda bajo el eslabon 2 sin tocarlo, pero
+       las cajas de colision se rozan. -->
+  <disable_collisions link1="station1/link_2" link2="station1/gripper_link"
+                      reason="Never"/>
+
+</robot>

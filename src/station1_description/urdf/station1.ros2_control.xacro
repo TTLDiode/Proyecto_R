@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!--
+  Interfaces de ros2_control de la Estacion 1.
+
+  La Entrega 1 dejo el modelo sin control de trayectoria, tal y como decia la
+  cabecera de station1.gazebo.xacro. Aqui se cierra ese pendiente: los tres
+  grados de libertad quedan expuestos como articulaciones comandables y el
+  simulador carga el controller_manager con la configuracion de
+  config/station1_controllers.yaml.
+
+  Por que interfaz de posicion y no de esfuerzo:
+  los tres actuadores son Pololu 37D con encoder de cuadratura y su lazo de
+  posicion se cierra en el microcontrolador, no en el PC. Comandar posicion en
+  la simulacion reproduce esa reparticion de tareas. Comandar esfuerzo
+  obligaria a simular aqui un lazo que en la maquina real vive en la Pico, y
+  el modelo se alejaria de lo que se construiria.
+
+  Posicion inicial. El homing lleva cada eje contra su final de carrera y
+  despues retrocede un margen, que es la practica habitual: quedarse pisando el
+  interruptor deja al eje sin margen de maniobra y al planificador con un
+  estado inicial exactamente sobre el limite, que rechaza. De ahi que theta2
+  arranque en 130 y no en los 135 del tope.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Retroceso desde el final de carrera, 5 grados -->
+  <xacro:property name="retroceso_homing" value="0.0873"/>
+  <xacro:property name="ini_theta1" value="${home_theta1}"/>
+  <xacro:property name="ini_theta2" value="${home_theta2 - retroceso_homing}"/>
+  <xacro:property name="ini_d3"     value="0.0"/>
+
+  <xacro:macro name="station1_ros2_control" params="prefijo controladores">
+
+    <ros2_control name="${prefijo}sistema" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+
+      <joint name="${prefijo}joint_1">
+        <command_interface name="position">
+          <param name="min">${lim_theta1_inf}</param>
+          <param name="max">${lim_theta1_sup}</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">${ini_theta1}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <joint name="${prefijo}joint_2">
+        <command_interface name="position">
+          <param name="min">${-lim_theta2}</param>
+          <param name="max">${lim_theta2}</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">${ini_theta2}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <joint name="${prefijo}joint_3">
+        <command_interface name="position">
+          <param name="min">0.0</param>
+          <param name="max">${carrera_d3}</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">${ini_d3}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <!-- El servo de la mordaza no es un grado de libertad de la cadena,
+           pero si un actuador comandable: se expone aparte para que el
+           planificador nunca lo vea como parte del brazo. -->
+      <joint name="${prefijo}gripper_joint">
+        <command_interface name="position">
+          <param name="min">0.0</param>
+          <param name="max">${lim_gripper}</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+
+    <gazebo>
+      <plugin filename="gz_ros2_control-system"
+              name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${controladores}</parameters>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

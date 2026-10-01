@@ -1,0 +1,74 @@
+# Limites de planificacion del brazo.
+#
+# Las velocidades son el 70 % de las del URDF, que a su vez salen de la hoja de
+# datos del Pololu 37D: 200 RPM en vacio, 20.944 rad/s en el eje, y 0.0267 m/s
+# en la prismatica a traves del husillo de 8 mm de avance.
+#
+# El 30 % que se descuenta es la reserva que necesita el lazo de posicion del
+# actuador, que corrige el error pidiendo mas velocidad que la de la referencia:
+# si la trayectoria ya va al limite, esa velocidad extra no existe. Medido sobre
+# la prismatica bajando 40 mm, el error maximo de seguimiento es
+#
+#     v pico (m/s)   0.0050   0.0100   0.0160   0.0214   0.0267
+#     error max (mm)   0.04     0.08     0.34     2.21     6.78
+#
+# es decir, se dispara al acercarse al limite. Al 70 % se queda por debajo de
+# 1 mm. La misma reserva esta en station1_control/trayectoria.py, como
+# MARGEN_VELOCIDAD, para que las dos vias de control se muevan igual de rapido
+# y la comparacion entre ellas sea limpia.
+#
+# Las aceleraciones no estan en ninguna hoja de datos y no se inventan: salen
+# del par disponible dividido por la inercia del conjunto que mueve cada
+# articulacion, con las inercias del propio URDF, que a su vez vienen del CAD.
+#
+#   theta1  I = 0.0893 kg m2 con el brazo extendido, que es el caso peor
+#           alpha = 0.389 / 0.0893 = 4.35 rad/s2
+#   theta2  I = 0.0129 kg m2
+#           alpha = 0.389 / 0.0129 = 30.1 rad/s2
+#   d3      el husillo da 61.1 N contra 2.17 N de peso, de modo que su limite
+#           mecanico esta en 266 m/s2 y no significa nada.
+#
+# Pero ese calculo supone que todo el par va a acelerar y no queda nada para el
+# amortiguamiento, la friccion ni, sobre todo, para que el lazo de posicion
+# corrija su propio error. Medido contra el simulador, sobre un giro de
+# 1.324 rad de theta1:
+#
+#     a pedida (rad/s2)   4.00     3.00     2.40     2.00     1.50
+#     error max (mrad)     542      424     10.4     10.7      5.9
+#
+# Es un codo: por encima de 2.4 rad/s2 el actuador satura y el eje deja de
+# seguir. Se declara 2.4 en theta1, el 55 % del limite teorico, y se aplica el
+# mismo 55 % a las otras dos articulaciones.
+#
+# El par de 0.389 N.m no es el del motor sino el que deja pasar el driver: el
+# Pololu daria 0.981 N.m en continuo, pero a ese par consume 2.72 A y el
+# TB6612FNG entrega 1.2 A por canal. Manda el driver, como ya recoge
+# parametros.xacro.
+#
+# Consecuencia que conviene tener presente: la velocidad nunca llega a ser la
+# restriccion activa. Con 4.35 rad/s2, alcanzar 20.944 rad/s exigiria 4.8 s y
+# 50.4 rad de recorrido, y el recorrido completo de theta1 son 3.5 rad. Todo
+# movimiento de esta estacion esta limitado por aceleracion, no por velocidad,
+# y su perfil real es triangular con un pico cercano a 3.9 rad/s.
+
+joint_limits:
+  station1/joint_1:
+    has_velocity_limits: true
+    max_velocity: 14.661
+    has_acceleration_limits: true
+    max_acceleration: 2.4
+  station1/joint_2:
+    has_velocity_limits: true
+    max_velocity: 14.661
+    has_acceleration_limits: true
+    max_acceleration: 15.0
+  station1/joint_3:
+    has_velocity_limits: true
+    max_velocity: 0.0187
+    has_acceleration_limits: true
+    max_acceleration: 0.3
+  station1/gripper_joint:
+    has_velocity_limits: true
+    max_velocity: 3.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
