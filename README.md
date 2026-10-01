@@ -1,138 +1,47 @@
-# Proyecto R — Línea Simulada
+# Propuesta de Entrega 2 — Estación 1
 
-Línea simulada de clasificación y empaque de componentes electrónicos.
-Tres estaciones robóticas de 3 GDL, una por estudiante, desarrolladas en ROS2 y Gazebo.
-
-Universidad EIA · Ingeniería Mecatrónica · Robótica y Control Digital
-
-La documentación técnica del proyecto vive en Notion. Este repositorio contiene el
-código, los modelos y los archivos de configuración.
-
-## Estaciones
-
-| Estación | Responsable | Configuración | Restricción |
-|---|---|---|---|
-| 1 — Alimentación y singulación | Santiago Fernando Machado Sanchez | RRP | Tiempo de ciclo de 30 s |
-| 2 — Clasificación e inspección | Diego Oxman Sabogal | RPR | Precisión de 20 mm |
-| 3 — Empaque | Juan David Guerra Cabrera | PRR | 10 unidades por caja |
-
-## Entorno
-
-Definido en ADR-001. Debe ser idéntico en las tres máquinas.
-
-- Ubuntu 24.04 LTS
-- ROS2 Jazzy Jalisco
-- Gazebo Harmonic (`gz sim` 8.x)
-- `gz_ros2_control` y `ros_gz_bridge`
-
-Instalación desde cero:
+Esta carpeta **no es el repositorio**. Es la propuesta de lo que entraría en él,
+para revisarla antes de mover nada. Se construye aparte:
 
 ```bash
-bash setup/install.sh
+cd ~/E2_propuesta
+colcon build --symlink-install       # sobre ~/proyecto-r-linea-simulada ya construido
 ```
 
-## Compilar y ejecutar
+## Qué hay aquí
 
-```bash
-source /opt/ros/jazzy/setup.bash
-colcon build
-source install/setup.bash
-```
-
-Ejecutar la línea completa. Mientras no existan los controladores, las tres
-estaciones corren como nodos de prueba:
-
-```bash
-ros2 launch line_bringup line.launch.py
-```
-
-A medida que una estación tenga su controlador, se retira de la lista:
-
-```bash
-ros2 launch line_bringup line.launch.py mock_stations:=station2,station3
-```
-
-Número de piezas de la corrida:
-
-```bash
-ros2 launch line_bringup line.launch.py n_parts:=10
-```
-
-## Estructura
-
-```
-├── setup/install.sh          Instalación del entorno
-├── docs/datasheets/          Hojas de datos de los componentes comerciales
-├── cad/stationN/             Modelos CAD, planos y STL exportados
-├── matlab/                   Verificación numérica de la cinemática
-└── src/
-    ├── line_interfaces/      Mensajes y servicios comunes
-    ├── line_bringup/         Mundo, poses de la línea y lanzamiento
-    ├── line_orchestrator/    Orquestador y nodo de prueba de estación
-    └── stationN_*/           Descripción y control de cada estación
-```
-
-Los paquetes de estación se crean a medida que se necesitan:
-
-```bash
-cd src
-ros2 pkg create --build-type ament_cmake station1_description
-ros2 pkg create --build-type ament_python station1_control
-```
-
-## Protocolo entre estaciones
-
-Cada estación expone la misma interfaz y no se suscribe a los eventos de ninguna
-otra. La secuencia la gobierna el orquestador. Para `N` igual a 1, 2 o 3:
-
-| Endpoint | Tipo | Dirección |
+| ruta | estado | qué es |
 |---|---|---|
-| `/line/stationN/start` | Servicio `StartTask` | Entrada |
-| `/line/stationN/done` | Tópico `HandoffEvent` | Salida, una vez por ciclo |
-| `/line/stationN/state` | Tópico `StationState` | Salida, continuo a 2 Hz |
+| `src/station1_description/` | **modificado** | copia de trabajo del paquete del repo, con la capa de `ros2_control` añadida |
+| `src/station1_moveit_config/` | **nuevo** | paquete de MoveIt: SRDF, cinemática, límites, controladores |
+| `src/station1_control/` | **nuevo** | cinemática propia, dinámica, trayectorias, nodo de control y nodo de estación |
+| `resultados/` | — | informe de la entrega y tablas medidas |
+| `evidencia/` | — | capturas y secuencia del movimiento |
 
-Reglas: una estación ocupada responde `accepted=false` y no encola peticiones;
-al terminar publica exactamente un evento de fin y vuelve a `IDLE`; ante un fallo
-publica `state=ERROR` y no publica en `done`.
+### Cambios sobre `station1_description`, que es lo único que toca al repo
 
-La especificación completa está en Notion, en Programación.
+| archivo | cambio |
+|---|---|
+| `urdf/station1.ros2_control.xacro` | **nuevo**, interfaces de `ros2_control` |
+| `config/station1_controllers.yaml` | **nuevo**, controladores y ganancia del lazo |
+| `launch/simulacion.launch.py` | **nuevo**, Gazebo con controladores activos |
+| `urdf/station1.urdf.xacro` | incluye lo anterior; **`tool0` pasa a colgar de `link_3`** |
+| `urdf/parametros.xacro` | sin cambios respecto de la copia del repo |
+| `CMakeLists.txt`, `package.xml` | instalan `config/`, dependencias nuevas |
 
-## Archivos de propiedad compartida
+El único cambio con efecto sobre la Entrega 1 es el reparentado de `tool0`, y
+con la mordaza cerrada la pose es idéntica. El motivo está en
+`resultados/entrega2.md`, sección 4.
 
-Tres archivos afectan a los tres integrantes. Toda modificación se acuerda entre
-los tres, porque un cambio aquí rompe o desplaza el trabajo de otra estación.
+## Documentos
 
-- `src/line_interfaces/msg/*.msg` y `srv/*.srv`
-- `src/line_bringup/config/line_poses.yaml`
-- `src/line_bringup/worlds/line.sdf`
+- `resultados/entrega2.md` — el informe de la entrega, con todo lo medido
+- `resultados/arquitectura-software-e1.md` — punto 4.4 de la guía
+- `resultados/entrega3-infraestructura.md` — qué de la Entrega 3 ya funciona
+- `resultados/comparacion_moveit_vs_propia.md` — generado por `comparar_moveit`
 
-## Convenciones
+## Comprobación rápida
 
-Ramas: `main` se mantiene siempre en un estado que compila. Una rama por tarea,
-con el prefijo del ámbito. Toda integración pasa por pull request.
-
-Mensajes de commit con prefijo de ámbito:
-
+```bash
+./verificar_e2.sh        # en el home de la caja
 ```
-[E1]   Estación 1
-[E2]   Estación 2
-[E3]   Estación 3
-[INT]  Integración: mundo, orquestador, line_poses.yaml
-[DOC]  Documentación y referencias
-[ENV]  Entorno: install.sh, dependencias
-```
-
-Cada integrante commitea con su propia cuenta.
-
-Los modelos CAD y los STL se versionan por ser entregables. Los videos y renders
-se publican en Notion, no aquí.
-
-## Sistemas de referencia
-
-Frame raíz único `world`. Cada estación opera bajo su namespace `/stationN` y
-prefija todos sus frames con `stationN/`. Unidades del Sistema Internacional:
-metros, kilogramos, radianes y segundos.
-
-Ninguna estación define poses de traspaso en su código: todas las leen de
-`src/line_bringup/config/line_poses.yaml`.
-

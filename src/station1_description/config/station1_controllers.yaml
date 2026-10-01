@@ -1,0 +1,97 @@
+# Controladores de la Estacion 1.
+#
+# Los carga el complemento gz_ros2_control desde el propio URDF, de modo que el
+# controller_manager nace dentro del simulador y no hace falta lanzarlo aparte.
+#
+# Hay dos controladores de trayectoria y no uno: el brazo son los tres motores
+# DC, que es lo que planifica MoveIt, y la mordaza es el servo, que se abre y
+# se cierra por su cuenta. Mezclarlos obligaria al planificador a tratar el
+# servo como un cuarto grado de libertad, que es justo lo que la guia no pide.
+#
+# update_rate 200 Hz frente al paso de fisica de 1 ms: el lazo de control corre
+# cinco veces mas lento que la integracion, que es la proporcion habitual y
+# basta de sobra para unas velocidades articulares de este orden.
+
+# Nodo que el complemento gz_ros2_control crea dentro de Gazebo. No es el
+# controller_manager: son dos nodos distintos que leen este mismo archivo, y
+# la ganancia del lazo de posicion la lee este. Puesta bajo controller_manager
+# se acepta sin protestar y no surte ningun efecto.
+gz_ros_control:
+  ros__parameters:
+    # Ganancia del lazo de posicion del actuador simulado. El complemento
+    # gz_ros2_control no manda la posicion al motor: calcula el error contra la
+    # consigna y lo convierte en una velocidad. Y no lo hace con esta ganancia
+    # a secas, sino multiplicada por update_rate,
+    #
+    #     v = -K * update_rate * (posicion - consigna)
+    #
+    # de modo que la ganancia efectiva del lazo es K * 200 = 100 1/s y la
+    # constante de tiempo del seguidor es 10 ms. Esa es la cifra que importa y
+    # es la que hay que citar, no el 0.5.
+    #
+    # Conviene entender los dos extremos, porque los dos se probaron:
+    #   - Con el valor por defecto, 0.1, la constante de tiempo sube a 50 ms y
+    #     la prismatica se queda 10 mm por detras de su consigna mientras
+    #     avanza a 0.0267 m/s. El joint_trajectory_controller lo detecta como
+    #     violacion de tolerancia y aborta la trayectoria a medio camino.
+    #   - Con 100, que parece lo razonable si uno cree que la ganancia es
+    #     directa, la ganancia efectiva es de 20000 1/s: la velocidad pedida
+    #     excede lo que el par del motor puede dar, el actuador satura y las
+    #     articulaciones vibran contra su limite de esfuerzo.
+    #
+    # 10 ms esta dos ordenes de magnitud por debajo de la duracion de los
+    # movimientos, que son segundos, de modo que el seguimiento del perfil no
+    # queda enmascarado por la dinamica del lazo: lo que mide la tabla de
+    # resultados es el perfil propio, no el error del servo.
+    position_proportional_gain: 0.5
+
+controller_manager:
+  ros__parameters:
+    update_rate: 200
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    brazo_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    mordaza_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+brazo_controller:
+  ros__parameters:
+    joints:
+      - station1/joint_1
+      - station1/joint_2
+      - station1/joint_3
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    allow_partial_joints_goal: false
+    # Interpola entre los puntos que le llegan. Con comando de posicion el
+    # controlador no necesita ganancias: el lazo se cierra en el actuador
+    # simulado, igual que se cerraria en la Pico.
+    interpolation_method: splines
+    constraints:
+      stopped_velocity_tolerance: 0.02
+      goal_time: 1.0
+      station1/joint_1: { trajectory: 0.10, goal: 0.01 }
+      station1/joint_2: { trajectory: 0.10, goal: 0.01 }
+      station1/joint_3: { trajectory: 0.01, goal: 0.001 }
+
+mordaza_controller:
+  ros__parameters:
+    joints:
+      - station1/gripper_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    allow_partial_joints_goal: false
+    constraints:
+      stopped_velocity_tolerance: 0.05
+      goal_time: 1.0

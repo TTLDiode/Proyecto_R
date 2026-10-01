@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
-project(station1_description)
+project(station1_moveit_config)
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY urdf launch rviz config
+install(DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
 )
 
