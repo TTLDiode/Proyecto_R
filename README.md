@@ -1,13 +1,3 @@
-# Propuesta de Entrega 2 — Estación 1
-
-Esta carpeta **no es el repositorio**. Es la propuesta de lo que entraría en él,
-para revisarla antes de mover nada. Se construye aparte:
-
-```bash
-cd ~/E2_propuesta
-colcon build --symlink-install       # sobre ~/proyecto-r-linea-simulada ya construido
-```
-
 ## Qué hay aquí
 
 | ruta | estado | qué es |
@@ -40,8 +30,3 @@ con la mordaza cerrada la pose es idéntica. El motivo está en
 - `resultados/entrega3-infraestructura.md` — qué de la Entrega 3 ya funciona
 - `resultados/comparacion_moveit_vs_propia.md` — generado por `comparar_moveit`
 
-## Comprobación rápida
-
-```bash
-./verificar_e2.sh        # en el home de la caja
-```
