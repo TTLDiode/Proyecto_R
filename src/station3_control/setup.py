@@ -15,8 +15,8 @@ setup(
     zip_safe=True,
     maintainer='judavca',
     maintainer_email='juandavidguerracabrera@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Cinematica propia, movimiento punto a punto y nodo de contrato de la Estacion 3 (RRP).',
+    license='MIT',
     extras_require={
         'test': [
             'pytest',
@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'punto_a_punto = station3_control.punto_a_punto:main',
         ],
     },
 )
