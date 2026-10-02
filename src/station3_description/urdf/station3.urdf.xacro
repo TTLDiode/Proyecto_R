@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<!--
+  Estacion 3 - Clasificacion y empaque
+  Configuracion RRP.
+
+  Responsable: Juan David Guerra Cabrera
+
+  Todos los frames llevan el prefijo de la estacion, segun ADR-005.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="station3">
+
+  <xacro:arg name="prefijo" default="station3/"/>
+  <xacro:property name="p" value="$(arg prefijo)"/>
+
+  <xacro:arg name="control" default="true"/>
+  <xacro:arg name="controladores"
+             default="$(find station3_description)/config/station3_controllers.yaml"/>
+
+  <xacro:include filename="$(find station3_description)/urdf/parametros.xacro"/>
+  <xacro:include filename="$(find station3_description)/urdf/inercias.xacro"/>
+  <xacro:include filename="$(find station3_description)/urdf/station3.gazebo.xacro"/>
+  <xacro:include filename="$(find station3_description)/urdf/station3.ros2_control.xacro"/>
+
+  <material name="silver">
+    <color rgba="0.700 0.700 0.700 1.000"/>
+  </material>
+
+  <link name="${p}base_link">
+    <inertial>
+      <xacro:inercia_base/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 -1.57079632679"/>
+      <geometry>
+        <mesh filename="package://station3_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 -1.57079632679"/>
+      <geometry>
+        <mesh filename="package://station3_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="${p}Link1_1">
+    <inertial>
+      <xacro:inercia_link1/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.0 0.0 -0.0535" rpy="0 0 -1.57079632679"/>
+      <geometry>
+        <mesh filename="package://station3_description/meshes/Link1_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.0 0.0 -0.0535" rpy="0 0 -1.57079632679"/>
+      <geometry>
+        <mesh filename="package://station3_description/meshes/Link1_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="${p}Link2_1">
+    <inertial>
+      <xacro:inercia_link2/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.1 0.0 -0.0795" rpy="0 0 -1.57079632679"/>
+      <geometry>
+        <mesh filename="package://station3_description/meshes/Link2_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.1 0.0 -0.0795" rpy="0 0 -1.57079632679"/>
+      <geometry>
+        <mesh filename="package://station3_description/meshes/Link2_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="${p}Prismatico_1">
+    <inertial>
+      <xacro:inercia_prismatico/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.0 -0.2 -0.061625" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://station3_description/meshes/Prismatico_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.0 -0.2 -0.061625" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://station3_description/meshes/Prismatico_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="${p}world"/>
+
+  <joint name="${p}world_to_base" type="fixed">
+    <parent link="${p}world"/>
+    <child link="${p}base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="${p}joint1_rev" type="revolute">
+    <origin xyz="0.0 0.0 0.0535" rpy="0 0 0"/>
+    <parent link="${p}base_link"/>
+    <child link="${p}Link1_1"/>
+    <axis xyz="0.0 -0.0 1.0"/>
+    <limit upper="1.570796" lower="-1.570796" effort="4.9" velocity="4.19"/>
+  </joint>
+
+  <joint name="${p}joint2_rev" type="revolute">
+    <origin xyz="0.1 0.0 0.026" rpy="0 0 0"/>
+    <parent link="${p}Link1_1"/>
+    <child link="${p}Link2_1"/>
+    <axis xyz="0.0 -0.0 1.0"/>
+    <limit upper="2.216568" lower="-2.216568" effort="4.9" velocity="4.19"/>
+  </joint>
+
+  <joint name="${p}joint3_prism" type="prismatic">
+    <origin xyz="0.1 0.0 -0.017875" rpy="0 0 0"/>
+    <parent link="${p}Link2_1"/>
+    <child link="${p}Prismatico_1"/>
+    <axis xyz="0.0 -0.0 1.0"/>
+    <limit upper="0.0" lower="-0.0616" effort="100" velocity="100"/>
+  </joint>
+
+</robot>
