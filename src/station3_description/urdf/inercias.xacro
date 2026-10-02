@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="inercia_base">
+    <origin xyz="-0.05017562970559864 -2.2518955897589762e-06 0.055877558881103656" rpy="0 0 0"/>
+    <mass value="${masa_base}"/>
+    <inertia ixx="0.002174" iyy="0.002132" izz="0.002026" ixy="-3.4761e-08" iyz="5.9243e-08" ixz="0.0003463"/>
+  </xacro:macro>
+
+  <xacro:macro name="inercia_link1">
+    <origin xyz="0.024082412399071485 8.067348825688214e-07 0.07855915155215717" rpy="0 0 0"/>
+    <mass value="${masa_link1}"/>
+    <inertia ixx="0.004221" iyy="0.005843" izz="0.002838" ixy="1.1139e-08" iyz="-1.5805e-08" ixz="0.0001219"/>
+  </xacro:macro>
+
+  <xacro:macro name="inercia_link2">
+    <origin xyz="0.05593671183346427 0.0013140724584443932 0.04972965995684987" rpy="0 0 0"/>
+    <mass value="${masa_link2}"/>
+    <inertia ixx="0.0009308" iyy="0.002416" izz="0.001752" ixy="-6.57358e-05" iyz="1.459649e-06" ixz="2.0512e-05"/>
+  </xacro:macro>
+
+  <xacro:macro name="inercia_prismatico">
+    <origin xyz="7e-06 9e-06 0.125516" rpy="0 0 0"/>
+    <mass value="${masa_prismatico}"/>
+    <inertia ixx="0.000294" iyy="0.000294" izz="2.688347e-06" ixy="1.21e-10" iyz="4.7e-11" ixz="7.91e-10"/>
+  </xacro:macro>
+
+</robot>

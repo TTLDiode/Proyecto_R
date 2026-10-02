@@ -1,0 +1,19 @@
+default_velocity_scaling_factor: 0.1
+default_acceleration_scaling_factor: 0.1
+
+joint_limits:
+  station3/joint1_rev:
+    has_velocity_limits: true
+    max_velocity: 4.19
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+  station3/joint2_rev:
+    has_velocity_limits: true
+    max_velocity: 4.19
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+  station3/joint3_prism:
+    has_velocity_limits: true
+    max_velocity: 0.05
+    has_acceleration_limits: true
+    max_acceleration: 0.1
