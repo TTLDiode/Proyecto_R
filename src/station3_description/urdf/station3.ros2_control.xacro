@@ -28,6 +28,9 @@
 
     <gazebo>
       <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <ros>
+          <namespace>station3</namespace>
+        </ros>
         <parameters>$(arg controladores)</parameters>
       </plugin>
     </gazebo>

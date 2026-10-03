@@ -34,6 +34,7 @@ def generate_launch_description():
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
+        namespace='station3',
         output='screen',
         parameters=[{'robot_description': robot_description,
                      'use_sim_time': True}])
@@ -42,7 +43,7 @@ def generate_launch_description():
         package='ros_gz_sim',
         executable='create',
         output='screen',
-        arguments=['-topic', 'robot_description', '-name', 'station3'])
+        arguments=['-topic', '/station3/robot_description', '-name', 'station3'])
 
     clock_bridge = Node(
         package='ros_gz_bridge',
@@ -54,13 +55,13 @@ def generate_launch_description():
         package='controller_manager',
         executable='spawner',
         arguments=['joint_state_broadcaster',
-                   '--controller-manager', '/controller_manager'])
+                   '--controller-manager', '/station3/controller_manager'])
 
     arm_controller = Node(
         package='controller_manager',
         executable='spawner',
         arguments=['arm_controller',
-                   '--controller-manager', '/controller_manager'])
+                   '--controller-manager', '/station3/controller_manager'])
 
     return LaunchDescription([
         set_resource_path,
