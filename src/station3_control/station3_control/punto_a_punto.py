@@ -33,7 +33,7 @@ class PuntoAPunto(Node):
     def __init__(self, px, py, pz, tiempo_seg):
         super().__init__('station3_punto_a_punto')
         self.publisher = self.create_publisher(
-            JointTrajectory, '/arm_controller/joint_trajectory', 10)
+            JointTrajectory, '/station3/arm_controller/joint_trajectory', 10)
         self._enviar(px, py, pz, tiempo_seg)
 
     def _enviar(self, px, py, pz, tiempo_seg):
@@ -68,7 +68,7 @@ class PuntoAPunto(Node):
 
         self.publisher.publish(msg)
         self.get_logger().info(
-            f'Trayectoria enviada a /arm_controller/joint_trajectory '
+            f'Trayectoria enviada a /station3/arm_controller/joint_trajectory '
             f'(objetivo: x={px}, y={py}, z={pz})')
 
 
