@@ -16,7 +16,7 @@ frame_id: world
 station_bases:
   station1: { x: 0.000, y: 0.000, z: 0.0, yaw: 0.0 }
   station2: { x: 0.500, y: 0.000, z: 0.0, yaw: 0.0 }
-  station3: { x: 1.000, y: 0.000, z: 0.0, yaw: 0.0 }
+  station3: { x: 0.910, y: 0.000, z: 0.0, yaw: 180.0 }
 
 # Bandeja de entrada de la Estacion 1.
 # La comprobacion de alcance se hace contra la esquina mas lejana de la zona de
@@ -37,18 +37,21 @@ handoff_2_3:
   orientation: { roll: 0.0, pitch: 0.0, yaw: 0.0 }
 
 # Cajas de empaque de la Estacion 3.
-# La Estacion 3 es PRR y su envolvente es alargado por el riel, de modo que su
-# responsable debe confirmar como aplica la restriccion de radio a esa
-# configuracion. Estos valores mantienen todas las cajas dentro de 320 mm de la
-# base, que es la lectura conservadora.
+# CORRECCION (2 oct 2026): la Estacion 3 es RRP, no PRR como asumia la nota
+# anterior. Con brazos de 0.1 m (a12=a23), el alcance maximo mecanico real es
+# 0.2 m desde la base, muy por debajo del envolvente de 320 mm que permite la
+# guia. Se recalcularon la base de la estacion (nueva posicion y yaw=180 para
+# que el brazo quede de frente al punto de entrada) y las cajas, verificando
+# cada punto contra la cinematica inversa real (limites articulares incluidos,
+# no solo la distancia radial). handoff_2_3 no se modifico.
 packing:
   units_per_box: 10
   categories: ["A", "B", "C"]
   box_slots:
-    A: { x: 1.180, y: -0.100, z: 0.040 }
-    B: { x: 1.180, y:  0.000, z: 0.040 }
-    C: { x: 1.180, y:  0.100, z: 0.040 }
-  next_box_offset: { x: 0.100, y: 0.0, z: 0.0 }
+    A: { x: 0.830, y: -0.100, z: 0.040 }
+    B: { x: 0.810, y:  0.000, z: 0.060 }
+    C: { x: 0.830, y:  0.100, z: 0.040 }
+  next_box_offset: { x: 0.0, y: 0.0, z: 0.030 }
 
 # Restricciones verificables de la guia
 constraints:
