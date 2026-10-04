@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'punto_a_punto = station3_control.punto_a_punto:main',
+            'nodo_estacion = station3_control.nodo_estacion:main',
         ],
     },
 )
