@@ -1,8 +1,9 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import (AppendEnvironmentVariable, IncludeLaunchDescription,
-                            RegisterEventHandler)
+from launch.actions import (AppendEnvironmentVariable, ExecuteProcess,
+                            IncludeLaunchDescription, RegisterEventHandler,
+                            TimerAction)
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command
@@ -63,11 +64,35 @@ def generate_launch_description():
         arguments=['arm_controller',
                    '--controller-manager', '/station3/controller_manager'])
 
+    # Puente para el acople cinematico de la pieza (ADR-002). El plugin
+    # DetachableJoint escucha mensajes nativos de Gazebo (gz.msgs.Empty),
+    # asi que se necesita puentear desde std_msgs/Empty de ROS2.
+    acople_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/station3/pieza/attach@std_msgs/msg/Empty]gz.msgs.Empty',
+            '/station3/pieza/detach@std_msgs/msg/Empty]gz.msgs.Empty',
+        ],
+        output='screen')
+
+    # El plugin DetachableJoint nace acoplado pese a lo que dice su propia
+    # documentacion (hallazgo de Estacion 1). Se publica un desacople unico
+    # al arrancar para que el estado inicial sea el esperado por el codigo.
+    desacople_inicial = TimerAction(
+        period=5.0,
+        actions=[ExecuteProcess(
+            cmd=['ros2', 'topic', 'pub', '--once',
+                 '/station3/pieza/detach', 'std_msgs/msg/Empty', '{}'],
+            output='screen')])
+
     return LaunchDescription([
         set_resource_path,
         gz_sim,
         robot_state_publisher,
         clock_bridge,
+        acople_bridge,
+        desacople_inicial,
         spawn_robot,
         RegisterEventHandler(OnProcessExit(
             target_action=spawn_robot,

@@ -133,4 +133,31 @@
     <limit upper="0.0" lower="-0.0616" effort="100" velocity="100"/>
   </joint>
 
+  <!-- ==================================================================
+       Acople cinematico de la pieza, segun ADR-002.
+
+       No acopla al arrancar segun la doc del plugin, pero en la practica
+       SI nace acoplado (hallazgo documentado por Estacion 1): el nodo de
+       la estacion debe publicar un desacople unico al arrancar para que
+       el estado inicial sea el que el codigo cree que es.
+
+       El eslabon padre es Prismatico_1: es la unica pieza movil capaz de
+       "sujetar" algo en este diseno, ya que no hay mordaza.
+  =================================================================== -->
+  <xacro:arg name="acople" default="true"/>
+  <xacro:arg name="pieza" default="pieza"/>
+  <xacro:if value="$(arg acople)">
+    <gazebo>
+      <plugin filename="gz-sim-detachable-joint-system"
+              name="gz::sim::systems::DetachableJoint">
+        <parent_link>${p}Prismatico_1</parent_link>
+        <child_model>$(arg pieza)</child_model>
+        <child_link>cuerpo</child_link>
+        <attach_topic>/station3/pieza/attach</attach_topic>
+        <detach_topic>/station3/pieza/detach</detach_topic>
+        <suppress_child_warning>true</suppress_child_warning>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
 </robot>

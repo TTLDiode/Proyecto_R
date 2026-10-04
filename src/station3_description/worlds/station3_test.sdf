@@ -33,5 +33,38 @@
         </visual>
       </link>
     </model>
+
+    <!-- ================================================================
+         La pieza. Un componente electronico de 20 x 20 x 12 mm y 20 g.
+
+         El rozamiento alto no es lo que la sujeta: la retencion la hace el
+         acople cinematico de ADR-002. Posicionada cerca del punto de
+         traspaso de prueba de esta estacion (handoff local ~0.16, 0, 0.06).
+    ================================================================= -->
+    <model name="pieza">
+      <pose>0.160 0.000 0.030 0 0 0</pose>
+      <link name="cuerpo">
+        <inertial>
+          <mass>0.0200</mass>
+          <inertia>
+            <ixx>9.067e-07</ixx><iyy>9.067e-07</iyy><izz>1.333e-06</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.020 0.020 0.012</size></box></geometry>
+          <surface>
+            <friction><ode><mu>0.9</mu><mu2>0.9</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.020 0.020 0.012</size></box></geometry>
+          <material>
+            <ambient>0.80 0.15 0.15 1</ambient>
+            <diffuse>0.80 0.15 0.15 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
   </world>
 </sdf>
