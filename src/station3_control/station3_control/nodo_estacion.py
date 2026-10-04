@@ -24,6 +24,8 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 from builtin_interfaces.msg import Duration, Time
 from rclpy.node import Node
+from rclpy.action import ActionClient
+from control_msgs.action import FollowJointTrajectory
 from std_msgs.msg import Empty
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
@@ -79,6 +81,9 @@ class NodoEstacion3(Node):
         self.pub_detach = self.create_publisher(Empty, '/station3/pieza/detach', 10)
         self.pub_estado = self.create_publisher(StationState, '/line/station3/state', 10)
         self.pub_done = self.create_publisher(HandoffEvent, '/line/station3/done', 10)
+        self.cliente_traj = ActionClient(
+            self, FollowJointTrajectory,
+            '/station3/arm_controller/follow_joint_trajectory')
 
         self.ocupado = False
         self.timer_estado = self.create_timer(0.5, self._publicar_estado)
@@ -87,6 +92,15 @@ class NodoEstacion3(Node):
             StartTask, '/line/station3/start', self._on_start)
 
         self.get_logger().info('Nodo de Estacion 3 listo.')
+
+    def _esperar(self, future, timeout=60.0):
+        """Bloquea este hilo hasta que el future termine. Devuelve su
+        resultado, o None si se agota el timeout."""
+        evento = threading.Event()
+        future.add_done_callback(lambda _: evento.set())
+        if not evento.wait(timeout):
+            return None
+        return future.result()
 
     def _mover(self, px, py, pz):
         """Mueve el efector al punto local (px,py,pz). Devuelve True si
