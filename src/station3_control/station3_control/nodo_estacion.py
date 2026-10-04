@@ -103,25 +103,32 @@ class NodoEstacion3(Node):
         return future.result()
 
     def _mover(self, px, py, pz):
-        """Mueve el efector al punto local (px,py,pz). Devuelve True si
-        el punto era alcanzable, False si no."""
+        """Mueve el efector al punto local y espera a que el controlador
+        confirme que llego. Lanza RuntimeError si algo falla."""
         soluciones, validas = cinematica_inversa(px, py, pz)
         if not any(validas):
-            self.get_logger().error(
+            raise RuntimeError(
                 f'Punto local ({px:.3f},{py:.3f},{pz:.3f}) no alcanzable.')
-            return False
-        idx = validas.index(True)
-        theta1, theta2, s3 = soluciones[idx]
+        theta1, theta2, s3 = soluciones[validas.index(True)]
 
-        msg = JointTrajectory()
-        msg.joint_names = NOMBRES_ARTICULACIONES
+        if not self.cliente_traj.wait_for_server(timeout_sec=5.0):
+            raise RuntimeError('Servidor de trayectoria no disponible.')
+
+        goal = FollowJointTrajectory.Goal()
+        goal.trajectory.joint_names = NOMBRES_ARTICULACIONES
         punto = JointTrajectoryPoint()
         punto.positions = [theta1, theta2, s3]
         punto.time_from_start = Duration(sec=int(TIEMPO_MOVIMIENTO))
-        msg.points = [punto]
-        self.pub_trayectoria.publish(msg)
-        time.sleep(TIEMPO_MOVIMIENTO + 0.5)
-        return True
+        goal.trajectory.points = [punto]
+
+        goal_handle = self._esperar(self.cliente_traj.send_goal_async(goal))
+        if goal_handle is None or not goal_handle.accepted:
+            raise RuntimeError('El controlador rechazo la trayectoria.')
+
+        resultado = self._esperar(goal_handle.get_result_async())
+        if (resultado is None or resultado.result.error_code
+                != FollowJointTrajectory.Result.SUCCESSFUL):
+            raise RuntimeError('El movimiento no termino con exito.')
 
     def _punto_caja(self, categoria):
         """Calcula el punto (world) de la caja segun la categoria y
@@ -152,6 +159,14 @@ class NodoEstacion3(Node):
         return response
 
     def _ciclo(self, pieza: HandoffEvent):
+        try:
+            self._ciclo_interno(pieza)
+        except Exception as e:
+            self.get_logger().error(f'Ciclo abortado: {e}')
+        finally:
+            self.ocupado = False
+
+    def _ciclo_interno(self, pieza: HandoffEvent):
         categoria = pieza.category
         self.get_logger().info(
             f'Iniciando ciclo para pieza {pieza.part_id}, categoria {categoria}')
@@ -194,8 +209,6 @@ class NodoEstacion3(Node):
             f'Ciclo completo para {pieza.part_id}. '
             f'Unidades en categoria {categoria}: '
             f'{self.conteo_por_categoria[categoria]}')
-
-        self.ocupado = False
 
     def _publicar_estado(self):
         msg = StationState()
