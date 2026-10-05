@@ -44,6 +44,17 @@ Z_APROXIMACION = 0.060
 Z_AGARRE = 0.017
 TIEMPO_MOVIMIENTO = 3.0
 
+# Posiciones de deposito (frame local de la estacion), una por pieza, en el
+# orden en que se llenan. Cada caja admite 10 piezas.
+SLOTS_LOCALES = {
+    'A': [(0.08, 0.10), (0.10, 0.10), (0.12, 0.10), (0.14, 0.10), (0.16, 0.10),
+          (0.08, 0.08), (0.10, 0.08), (0.12, 0.08), (0.14, 0.08), (0.16, 0.08)],
+    'B': [(0.10, 0.04), (0.10, 0.02), (0.10, 0.00), (0.10, -0.02), (0.10, -0.04),
+          (0.12, 0.04), (0.12, 0.02), (0.12, 0.00), (0.12, -0.02), (0.12, -0.04)],
+    'C': [(0.08, -0.08), (0.10, -0.08), (0.12, -0.08), (0.14, -0.08), (0.16, -0.08),
+          (0.08, -0.10), (0.10, -0.10), (0.12, -0.10), (0.14, -0.10), (0.16, -0.10)],
+}
+
 
 def mundo_a_local(wx, wy, wz, base_x, base_y, yaw_deg):
     dx, dy = wx - base_x, wy - base_y
@@ -130,6 +141,14 @@ class NodoEstacion3(Node):
                 != FollowJointTrajectory.Result.SUCCESSFUL):
             raise RuntimeError('El movimiento no termino con exito.')
 
+    def _slot_local(self, categoria):
+        """Punto local (x, y) donde se deposita la siguiente pieza de la
+        categoria, segun cuantas lleva ya. Lanza KeyError si la categoria
+        no existe."""
+        slots = SLOTS_LOCALES[categoria]
+        cuenta = self.conteo_por_categoria.get(categoria, 0)
+        return slots[cuenta % len(slots)]
+
     def _punto_caja(self, categoria):
         """Calcula el punto (world) de la caja segun la categoria y
         cuantas unidades lleva, aplicando next_box_offset cada vez que
@@ -184,7 +203,7 @@ class NodoEstacion3(Node):
 
         # 2. Ir sobre la caja correspondiente, bajar, desacoplar, subir
         bx, by, bz = self._punto_caja(categoria)
-        lx, ly, _ = mundo_a_local(bx, by, 0.0, self.base_x, self.base_y, self.yaw)
+        lx, ly = self._slot_local(categoria)
 
         self._mover(lx, ly, Z_APROXIMACION)
         self._mover(lx, ly, Z_AGARRE)
