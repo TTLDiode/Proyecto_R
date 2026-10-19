@@ -31,9 +31,10 @@ handoff_1_2:
   position:    { x: 0.250, y: 0.000, z: 0.060 }
   orientation: { roll: 0.0, pitch: 0.0, yaw: 0.0 }
 
-# Punto de entrada de la Estacion 3, a 250 mm de las bases 2 y 3.
+# Punto de entrada de la Estacion 3, a 220 mm de la base 2 y a 190 mm de la
+# base 3 (antes 250 mm de ambas; se acerco a la base 3 por acuerdo del equipo).
 handoff_2_3:
-  position:    { x: 0.750, y: 0.000, z: 0.060 }
+  position:    { x: 0.720, y: 0.000, z: 0.060 }
   orientation: { roll: 0.0, pitch: 0.0, yaw: 0.0 }
 
 # Cajas de empaque de la Estacion 3.
