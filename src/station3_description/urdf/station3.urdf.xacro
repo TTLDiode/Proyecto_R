@@ -25,6 +25,16 @@
     <color rgba="0.700 0.700 0.700 1.000"/>
   </material>
 
+  <material name="blanco">
+    <color rgba="0.950 0.950 0.950 1.000"/>
+  </material>
+  <material name="amarillo_maquinaria">
+    <color rgba="1.000 0.780 0.050 1.000"/>
+  </material>
+  <material name="negro">
+    <color rgba="0.050 0.050 0.050 1.000"/>
+  </material>
+
   <link name="${p}base_link">
     <inertial>
       <xacro:inercia_base/>
@@ -34,7 +44,7 @@
       <geometry>
         <mesh filename="package://station3_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="silver"/>
+      <material name="blanco"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 -1.57079632679"/>
@@ -53,7 +63,7 @@
       <geometry>
         <mesh filename="package://station3_description/meshes/Link1_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="silver"/>
+      <material name="amarillo_maquinaria"/>
     </visual>
     <collision>
       <origin xyz="-0.0 0.0 -0.0535" rpy="0 0 -1.57079632679"/>
@@ -72,7 +82,7 @@
       <geometry>
         <mesh filename="package://station3_description/meshes/Link2_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="silver"/>
+      <material name="amarillo_maquinaria"/>
     </visual>
     <collision>
       <origin xyz="-0.1 0.0 -0.0795" rpy="0 0 -1.57079632679"/>
@@ -91,7 +101,7 @@
       <geometry>
         <mesh filename="package://station3_description/meshes/Prismatico_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="silver"/>
+      <material name="negro"/>
     </visual>
     <collision>
       <origin xyz="-0.0 -0.2 -0.061625" rpy="0 0 0"/>
