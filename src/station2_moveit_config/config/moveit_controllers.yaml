@@ -1,0 +1,28 @@
+# Como habla MoveIt con los controladores que ya corren dentro de Gazebo.
+# Los nombres coinciden con station2_description/config/station2_controllers.yaml.
+# move_group se lanza en el espacio de nombres station2, de modo que
+# "brazo_controller/follow_joint_trajectory" resuelve a
+# /station2/brazo_controller/follow_joint_trajectory.
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+
+moveit_simple_controller_manager:
+  controller_names:
+    - brazo_controller
+    - mordaza_controller
+
+  brazo_controller:
+    type: FollowJointTrajectory
+    action_ns: follow_joint_trajectory
+    default: true
+    joints:
+      - station2/joint_1
+      - station2/joint_2
+      - station2/joint_3
+
+  mordaza_controller:
+    type: FollowJointTrajectory
+    action_ns: follow_joint_trajectory
+    default: true
+    joints:
+      - station2/dedo_1_joint
+      - station2/dedo_2_joint
