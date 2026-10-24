@@ -43,8 +43,12 @@
       constraints:
         stopped_velocity_tolerance: 0.02
         goal_time: 1.0
-        station2/joint_1: { trajectory: 0.10, goal: 0.01 }
-        station2/joint_2: { trajectory: 0.10, goal: 0.01 }
+        # Seguimiento de 0.25 rad: con las tres estaciones en el mismo Gazebo
+        # el cambio de rama hacia el traspaso 2-3 (theta2 de +97 a -86 grados,
+        # con la pieza acoplada) llego a 0.101 rad de retraso y abortaba con
+        # 0.10. La tolerancia de llegada sigue en 0.01 rad.
+        station2/joint_1: { trajectory: 0.25, goal: 0.01 }
+        station2/joint_2: { trajectory: 0.25, goal: 0.01 }
         station2/joint_3: { trajectory: 0.01, goal: 0.001 }
 
   mordaza_controller:
