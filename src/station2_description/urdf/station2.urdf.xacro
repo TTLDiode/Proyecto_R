@@ -1,0 +1,371 @@
+<?xml version="1.0"?>
+<!--
+  Estacion 2 - Clasificacion e inspeccion por vision. Robot TRIADA.
+  Configuracion RRP tipo SCARA: theta1 en la base, theta2 en el codo y d3
+  como desplazamiento vertical del vastago.
+
+  Responsable: Diego Oxman Sabogal
+
+  Estructura adaptada de station1_description/urdf/station1.urdf.xacro
+  (mismos nombres de articulaciones, eslabones y argumentos), para que las
+  herramientas de la linea traten a las dos estaciones igual.
+
+  Transmision (CAD v5.x):
+    theta1  motor en el piso, detras de la torre, correa GT2 20T a 60T (3:1)
+    theta2  motor sobre el eje de theta1, correa al codo (1:1)
+    d3      motor junto al codo, correa 20T a 60T y husillo Tr8 (3:1)
+  Pinza: servo SG90 con piñon y dos cremalleras sobre carriles.
+  Camara: Raspberry Pi Camera Module 3 Wide bajo el eslabon 2.
+
+  Todos los frames llevan el prefijo de la estacion, segun ADR-005.
+
+  Geometria de colision simplificada a cajas y cilindros. Las mallas del CAD,
+  cuando esten en meshes/, solo sustituyen la parte visual.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="station2">
+
+  <xacro:arg name="prefijo" default="station2/"/>
+  <xacro:property name="p" value="$(arg prefijo)"/>
+
+  <xacro:include filename="$(find station2_description)/urdf/parametros.xacro"/>
+  <xacro:include filename="$(find station2_description)/urdf/inercias.xacro"/>
+  <xacro:include filename="$(find station2_description)/urdf/station2.gazebo.xacro"/>
+  <xacro:include filename="$(find station2_description)/urdf/station2.ros2_control.xacro"/>
+
+  <!-- Con control:=false el modelo se abre en RViz sin controller_manager,
+       que es como se revisa el arbol TF. -->
+  <xacro:arg name="control" default="true"/>
+  <xacro:arg name="controladores"
+             default="$(find station2_description)/config/station2_controllers.yaml"/>
+  <!-- Camara simulada. Necesita el sistema de sensores de Gazebo con un motor
+       de render; con camara:=false el modelo queda igual pero sin sensor. -->
+  <xacro:arg name="camara" default="true"/>
+
+  <material name="acrilico"> <color rgba="0.85 0.88 0.92 0.80"/></material>
+  <material name="acrilico_negro"> <color rgba="0.10 0.10 0.12 1.0"/></material>
+  <material name="pla">      <color rgba="0.95 0.55 0.10 1.0"/></material>
+  <material name="metal">    <color rgba="0.62 0.62 0.65 1.0"/></material>
+  <material name="motor">    <color rgba="0.20 0.20 0.22 1.0"/></material>
+  <material name="pcb">      <color rgba="0.05 0.35 0.15 1.0"/></material>
+
+  <!-- Alturas derivadas -->
+  <xacro:property name="z_base_sup" value="${patas_z + base_z}"/>
+  <xacro:property name="z_link2"    value="${altura_theta1 + z_codo}"/>
+  <xacro:property name="z_j3"       value="${z_tool_max - z_link2}"/>
+  <xacro:property name="largo_vastago" value="0.180"/>
+
+  <!-- ==================================================================
+       base_link: placa de acrilico de 300 x 300 sobre patas de goma, torre
+       en cajon de acrilico con el lazy susan de theta1 arriba, motor de
+       theta1 en el piso por detras y la PCB de control en la zona +y.
+       Es fijo al mundo; su masa cuenta para el balance de la estacion.
+  =================================================================== -->
+  <link name="${p}base_link">
+    <visual>
+      <origin xyz="0 0 ${patas_z + base_z/2}"/>
+      <geometry><box size="${base_x} ${base_y} ${base_z}"/></geometry>
+      <material name="acrilico_negro"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${z_base_sup + (altura_theta1 - z_base_sup)/2}"/>
+      <geometry><box size="${torre_lado} ${torre_lado} ${altura_theta1 - z_base_sup}"/></geometry>
+      <material name="acrilico"/>
+    </visual>
+    <!-- Motor de theta1 en el piso, 59 mm por detras del eje -->
+    <visual>
+      <origin xyz="-0.059 0 ${z_base_sup + motor_largo/2}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+      <material name="motor"/>
+    </visual>
+    <!-- PCB de control, 100 x 99 mm, sobre separadores en la zona +y -->
+    <visual>
+      <origin xyz="0 0.095 ${z_base_sup + 0.012}"/>
+      <geometry><box size="0.100 0.099 0.002"/></geometry>
+      <material name="pcb"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 ${(patas_z + base_z)/2}"/>
+      <geometry><box size="${base_x} ${base_y} ${patas_z + base_z}"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 ${z_base_sup + (altura_theta1 - z_base_sup)/2}"/>
+      <geometry><box size="${torre_lado} ${torre_lado} ${altura_theta1 - z_base_sup}"/></geometry>
+    </collision>
+
+    <xacro:inercia_cad masa="${m_base}" centro="${c_base}" tensor="${i_base}"/>
+  </link>
+
+  <!-- ==================================================================
+       Anclaje al mundo. En la maquina real no hay tornillos a la mesa: el
+       robot se sostiene por diseño (factor de seguridad al vuelco 3.79). En
+       la simulacion la union fija evita que el contacto de las patas meta
+       ruido en la medida de precision; con anclar:=false se puede comprobar
+       que no vuelca.
+
+       La union lleva la pose de la base en la linea (line_poses.yaml), de
+       modo que el frame world del arbol TF es el mismo world de Gazebo y de
+       las otras dos estaciones, y no la base de esta. El launch crea el
+       modelo en el origen y es esta union la que lo coloca en x = 0.5.
+  =================================================================== -->
+  <xacro:arg name="anclar" default="true"/>
+  <xacro:arg name="base_x" default="0.5"/>
+  <xacro:arg name="base_y" default="0.0"/>
+  <xacro:arg name="base_yaw" default="0.0"/>
+  <xacro:if value="$(arg anclar)">
+    <link name="world"/>
+    <joint name="${p}anclaje" type="fixed">
+      <parent link="world"/>
+      <child  link="${p}base_link"/>
+      <origin xyz="$(arg base_x) $(arg base_y) 0" rpy="0 0 $(arg base_yaw)"/>
+    </joint>
+  </xacro:if>
+
+  <!-- ==================== theta1: rotacion de la base ==================== -->
+  <joint name="${p}joint_1" type="revolute">
+    <parent link="${p}base_link"/>
+    <child  link="${p}link_1"/>
+    <origin xyz="0 0 ${altura_theta1}"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${lim_theta1_inf}" upper="${lim_theta1_sup}"
+           velocity="${vel_t1}" effort="${esfuerzo_t1}"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <!-- ==================================================================
+       link_1: placa de acrilico de 6 mm. Lleva encima el motor de theta2,
+       coaxial con theta1, y en el codo el eje con dos 688 y el lazy susan.
+  =================================================================== -->
+  <link name="${p}link_1">
+    <visual>
+      <origin xyz="${(l1+2*cola)/2 - cola} 0 ${brazo_espesor/2}"/>
+      <geometry><box size="${l1 + 2*cola} ${brazo_ancho} ${brazo_espesor}"/></geometry>
+      <material name="acrilico"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${brazo_espesor + 0.010 + motor_largo/2}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+      <material name="motor"/>
+    </visual>
+    <collision>
+      <origin xyz="${(l1+2*cola)/2 - cola} 0 ${brazo_espesor/2}"/>
+      <geometry><box size="${l1 + 2*cola} ${brazo_ancho} ${brazo_espesor}"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 ${brazo_espesor + 0.010 + motor_largo/2}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+    </collision>
+    <xacro:inercia_cad masa="${m_link1}" centro="${c_link1}" tensor="${i_link1}"/>
+  </link>
+
+  <!-- ==================== theta2: codo ====================
+       El origen esta en la cara inferior del eslabon 2, por encima del
+       eslabon 1 y del lazy susan del codo. -->
+  <joint name="${p}joint_2" type="revolute">
+    <parent link="${p}link_1"/>
+    <child  link="${p}link_2"/>
+    <origin xyz="${l1} 0 ${z_codo}"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-lim_theta2}" upper="${lim_theta2}"
+           velocity="${vel_t2}" effort="${esfuerzo_t2}"/>
+    <dynamics damping="0.03" friction="0.01"/>
+  </joint>
+
+  <!-- ==================================================================
+       link_2: placa de acrilico de 6 mm con el motor de d3 junto al codo,
+       el husillo Tr8 y la varilla de guia en su extremo, y la camara
+       colgando por debajo.
+  =================================================================== -->
+  <link name="${p}link_2">
+    <visual>
+      <origin xyz="${(l2+2*cola)/2 - cola} 0 ${brazo_espesor/2}"/>
+      <geometry><box size="${l2 + 2*cola} ${brazo_ancho} ${brazo_espesor}"/></geometry>
+      <material name="acrilico"/>
+    </visual>
+    <visual>
+      <origin xyz="0.045 0 ${brazo_espesor + motor_largo/2}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+      <material name="motor"/>
+    </visual>
+    <visual>
+      <origin xyz="${l2} ${y_husillo} ${husillo_largo/2 - 0.020}"/>
+      <geometry><cylinder radius="${husillo_radio}" length="${husillo_largo}"/></geometry>
+      <material name="metal"/>
+    </visual>
+    <visual>
+      <origin xyz="${l2} ${y_guia} ${husillo_largo/2 - 0.020}"/>
+      <geometry><cylinder radius="${husillo_radio}" length="${husillo_largo}"/></geometry>
+      <material name="metal"/>
+    </visual>
+    <!-- Puente superior del husillo -->
+    <visual>
+      <origin xyz="${l2} 0 ${husillo_largo - 0.020}"/>
+      <geometry><box size="0.030 0.060 0.006"/></geometry>
+      <material name="acrilico"/>
+    </visual>
+    <!-- Camara: placa de 25 x 24 mm -->
+    <visual>
+      <origin xyz="${cam_x} ${cam_y} ${cam_z_abs - z_link2 + 0.006}"/>
+      <geometry><box size="0.025 0.024 0.008"/></geometry>
+      <material name="pcb"/>
+    </visual>
+
+    <collision>
+      <origin xyz="${(l2+2*cola)/2 - cola} 0 ${brazo_espesor/2}"/>
+      <geometry><box size="${l2 + 2*cola} ${brazo_ancho} ${brazo_espesor}"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.045 0 ${brazo_espesor + motor_largo/2}"/>
+      <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="${l2} 0 ${husillo_largo/2 - 0.020}"/>
+      <geometry><box size="0.030 0.060 ${husillo_largo}"/></geometry>
+    </collision>
+    <xacro:inercia_cad masa="${m_link2}" centro="${c_link2}" tensor="${i_link2}"/>
+  </link>
+
+  <!-- ==================== d3: desplazamiento vertical ====================
+       El origen de link_3 es tool0 con d3 = 0, el punto de trabajo en lo
+       alto del recorrido. El desplazamiento es descendente. -->
+  <joint name="${p}joint_3" type="prismatic">
+    <parent link="${p}link_2"/>
+    <child  link="${p}link_3"/>
+    <origin xyz="${l2} 0 ${z_j3}"/>
+    <axis xyz="0 0 -1"/>
+    <limit lower="0.0" upper="${carrera_d3}"
+           velocity="${vel_pris}" effort="${esfuerzo_pris}"/>
+    <!-- Husillo autoblocante (rendimiento 0.2): la friccion por encima del
+         peso del conjunto hace que el eje no se descuelgue sin par. -->
+    <dynamics damping="2.0" friction="4.0"/>
+  </joint>
+
+  <!-- ==================================================================
+       link_3: vastago de 8 mm, tuerca del husillo y cuerpo de la mordaza
+       con el servo SG90, el piñon y las dos cremalleras.
+  =================================================================== -->
+  <link name="${p}link_3">
+    <visual>
+      <origin xyz="0 0 ${dedo_largo + pinza_z + largo_vastago/2}"/>
+      <geometry><cylinder radius="${vastago_radio}" length="${largo_vastago}"/></geometry>
+      <material name="metal"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${dedo_largo + pinza_z/2}"/>
+      <geometry><box size="${pinza_y} ${pinza_x} ${pinza_z}"/></geometry>
+      <material name="pla"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${dedo_largo + pinza_z/2}"/>
+      <geometry><box size="${pinza_y} ${pinza_x} ${pinza_z}"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 ${dedo_largo + pinza_z + largo_vastago/2}"/>
+      <geometry><cylinder radius="${vastago_radio}" length="${largo_vastago}"/></geometry>
+    </collision>
+    <xacro:inercia_cad masa="${m_link3}" centro="${c_link3}" tensor="${i_link3}"/>
+  </link>
+
+  <!-- ==================== Mordaza: dos dedos prismaticos ====================
+       No son grados de libertad del brazo: los mueve el servo por el piñon y
+       se exponen en un controlador aparte. Se cierran a lo largo de y,
+       desde la apertura maxima de 60 mm, a uno y otro lado de tool0. -->
+  <xacro:macro name="dedo" params="nombre signo">
+    <joint name="${p}${nombre}_joint" type="prismatic">
+      <parent link="${p}link_3"/>
+      <child  link="${p}${nombre}"/>
+      <origin xyz="0 ${signo * (luz_abierta/2 + dedo_y/2)} 0"/>
+      <axis xyz="0 ${-signo} 0"/>
+      <limit lower="0.0" upper="${carrera_dedo}" velocity="0.05" effort="10.0"/>
+      <dynamics damping="0.5" friction="0.1"/>
+    </joint>
+    <link name="${p}${nombre}">
+      <visual>
+        <origin xyz="0 0 ${dedo_largo/2 - dedo_bajo_tool}"/>
+        <geometry><box size="${dedo_x} ${dedo_y} ${dedo_largo}"/></geometry>
+        <material name="pla"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${dedo_largo/2 - dedo_bajo_tool}"/>
+        <geometry><box size="${dedo_x} ${dedo_y} ${dedo_largo}"/></geometry>
+      </collision>
+      <xacro:inercia_componente masa="${m_dedo}" x="${dedo_x}" y="${dedo_y}" z="${dedo_largo}">
+        <origin xyz="0 0 ${dedo_largo/2 - dedo_bajo_tool}"/>
+      </xacro:inercia_componente>
+    </link>
+  </xacro:macro>
+  <xacro:dedo nombre="dedo_1" signo="1"/>
+  <xacro:dedo nombre="dedo_2" signo="-1"/>
+
+  <!-- Punto de trabajo. Cuelga del carro, no de los dedos: es un sistema
+       fijo del brazo y el grupo de planificacion sigue teniendo tres
+       articulaciones. -->
+  <joint name="${p}tool0_joint" type="fixed">
+    <parent link="${p}link_3"/>
+    <child  link="${p}tool0"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+  <link name="${p}tool0"/>
+
+  <!-- ==================== Camara ====================
+       camara_link sigue la convencion de Gazebo (mira a lo largo de +x), y
+       camara_optica la de ROS (z hacia delante, x a la derecha, y abajo). -->
+  <joint name="${p}camara_joint" type="fixed">
+    <parent link="${p}link_2"/>
+    <child  link="${p}camara_link"/>
+    <origin xyz="${cam_x} ${cam_y} ${cam_z_abs - z_link2}" rpy="0 ${pi/2} 0"/>
+  </joint>
+  <link name="${p}camara_link"/>
+  <joint name="${p}camara_optica_joint" type="fixed">
+    <parent link="${p}camara_link"/>
+    <child  link="${p}camara_optica"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+  <link name="${p}camara_optica"/>
+
+  <xacro:station2_gazebo prefijo="${p}"/>
+
+  <xacro:if value="$(arg camara)">
+    <xacro:station2_camara prefijo="${p}"/>
+  </xacro:if>
+
+  <!-- ==================================================================
+       Acople cinematico de las piezas, segun ADR-002.
+
+       El complemento DetachableJoint se ata a un modelo por nombre, de modo
+       que hay uno por pieza que la estacion pueda coger: "pieza" es la que
+       trae la Estacion 1 en la linea y pieza_roja, pieza_verde y pieza_azul
+       son las de prueba que genera este paquete. Cada uno escucha en
+       /station2/<pieza>/attach y /station2/<pieza>/detach.
+
+       El complemento nace acoplado; el launch publica un desacople al
+       arrancar (comprobado y documentado en station1_description).
+  =================================================================== -->
+  <xacro:arg name="acople" default="true"/>
+  <xacro:arg name="piezas" default="pieza"/>
+  <xacro:macro name="acople_pieza" params="nombres">
+    <xacro:if value="${len(nombres) > 0}">
+      <gazebo>
+        <plugin filename="gz-sim-detachable-joint-system"
+                name="gz::sim::systems::DetachableJoint">
+          <parent_link>${p}link_3</parent_link>
+          <child_model>${nombres[0]}</child_model>
+          <child_link>cuerpo</child_link>
+          <attach_topic>/station2/${nombres[0]}/attach</attach_topic>
+          <detach_topic>/station2/${nombres[0]}/detach</detach_topic>
+          <suppress_child_warning>true</suppress_child_warning>
+        </plugin>
+      </gazebo>
+      <xacro:acople_pieza nombres="${nombres[1:]}"/>
+    </xacro:if>
+  </xacro:macro>
+  <xacro:if value="$(arg acople)">
+    <xacro:acople_pieza nombres="${[n.strip() for n in '$(arg piezas)'.split(',') if n.strip()]}"/>
+  </xacro:if>
+
+  <xacro:if value="$(arg control)">
+    <xacro:station2_ros2_control prefijo="${p}"
+                                 controladores="$(arg controladores)"/>
+  </xacro:if>
+
+</robot>

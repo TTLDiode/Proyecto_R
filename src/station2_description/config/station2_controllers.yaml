@@ -1,0 +1,63 @@
+# Controladores de la Estacion 2. Adaptado de station1_controllers.yaml.
+#
+# El controller_manager vive en /station2 (ver station2.ros2_control.xacro),
+# de ahi el comodin /** delante de cada nodo, como en la Estacion 3.
+#
+# Dos controladores de trayectoria: el brazo, que son los tres motores DC y
+# lo que planifica MoveIt, y la mordaza, que es el servo.
+/**:
+  gz_ros_control:
+    ros__parameters:
+      # Ganancia del lazo de posicion del actuador simulado. La ganancia
+      # efectiva es K * update_rate = 0.5 * 200 = 100 1/s, constante de tiempo
+      # de 10 ms (medido y explicado en station1_controllers.yaml).
+      position_proportional_gain: 0.5
+
+  controller_manager:
+    ros__parameters:
+      update_rate: 200
+      use_sim_time: true
+
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+
+      brazo_controller:
+        type: joint_trajectory_controller/JointTrajectoryController
+
+      mordaza_controller:
+        type: joint_trajectory_controller/JointTrajectoryController
+
+  brazo_controller:
+    ros__parameters:
+      joints:
+        - station2/joint_1
+        - station2/joint_2
+        - station2/joint_3
+      command_interfaces:
+        - position
+      state_interfaces:
+        - position
+        - velocity
+      allow_partial_joints_goal: false
+      interpolation_method: splines
+      constraints:
+        stopped_velocity_tolerance: 0.02
+        goal_time: 1.0
+        station2/joint_1: { trajectory: 0.10, goal: 0.01 }
+        station2/joint_2: { trajectory: 0.10, goal: 0.01 }
+        station2/joint_3: { trajectory: 0.01, goal: 0.001 }
+
+  mordaza_controller:
+    ros__parameters:
+      joints:
+        - station2/dedo_1_joint
+        - station2/dedo_2_joint
+      command_interfaces:
+        - position
+      state_interfaces:
+        - position
+        - velocity
+      allow_partial_joints_goal: false
+      constraints:
+        stopped_velocity_tolerance: 0.05
+        goal_time: 1.0
