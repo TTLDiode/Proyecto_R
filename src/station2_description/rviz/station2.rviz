@@ -71,13 +71,13 @@ Visualization Manager:
     Current:
       Class: rviz_default_plugins/Orbit
       Name: Current View
-      Distance: 0.8
+      Distance: 0.75
       Yaw: 0.9
       Pitch: 0.6
       Focal Point:
-        X: 0.05
-        Y: 0.05
-        Z: 0.12
+        X: 0.55
+        Y: 0.0
+        Z: 0.10
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05
       Near Clip Distance: 0.01
