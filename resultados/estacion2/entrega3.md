@@ -115,11 +115,13 @@ ros2 launch line_bringup line.launch.py mock_stations:=station1,station3
 
 ## 6. Línea completa
 
-`station2_description/launch/simulacion_en_linea.launch.py` añade la Estación
-2 al Gazebo que ya levanta la Estación 1 (sin otro mundo ni otro puente de
-reloj). La prueba con las tres estaciones reales queda pendiente de hacerse en
-el equipo de Ubuntu, porque depende del estado de las Estaciones 1 y 3 en sus
-ramas.
+Con las tres estaciones reales en el mismo Gazebo y el orquestador sin nodos de
+prueba, la línea completó una pieza de punta a punta: la Estación 1 la llevó al
+traspaso 1-2, la Estación 2 la clasificó como A (error de tool0 de 0.12 mm) y
+la dejó en el 2-3 a 0.029 mm del punto, y la Estación 3 la contó en la caja A.
+Detalle y observaciones para el equipo (Gazebo al 17 % del tiempo real en la
+nube, tolerancias con carga y la pieza propia de la Estación 3) en
+`prueba_linea_completa.md`.
 
 ## 7. Arquitectura
 
