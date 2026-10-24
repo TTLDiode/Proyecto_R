@@ -25,6 +25,7 @@ setup(
             'prueba_estacion = station2_control.prueba_estacion:main',
             'prueba_cinematica = station2_control.prueba_cinematica:main',
             'comparar_moveit = station2_control.comparar_moveit:main',
+            'alimentador_linea = station2_control.alimentador_linea:main',
         ],
     },
 )
