@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  Etiquetas especificas de Gazebo para la Estacion 2: colores, rozamiento y
+  la camara de inspeccion. Adaptado de station1_description.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="station2_gazebo" params="prefijo">
+    <gazebo reference="${prefijo}base_link">
+      <mu1>0.8</mu1>
+      <mu2>0.8</mu2>
+    </gazebo>
+    <xacro:macro name="dedo_gz" params="nombre">
+      <gazebo reference="${prefijo}${nombre}">
+        <!-- La sujecion real la hace el acople cinematico de ADR-002. -->
+        <mu1>1.2</mu1>
+        <mu2>1.2</mu2>
+      </gazebo>
+    </xacro:macro>
+    <xacro:dedo_gz nombre="dedo_1"/>
+    <xacro:dedo_gz nombre="dedo_2"/>
+  </xacro:macro>
+
+  <!-- ==================================================================
+       Camara de inspeccion: Camera Module 3 Wide, 102 grados horizontales.
+       La imagen sale por gz-transport en /station2/camara/image y el launch
+       la cruza a ROS con ros_gz_bridge. Necesita el sistema Sensors con un
+       motor de render; lo carga el propio modelo para no tocar el mundo
+       compartido de la linea.
+  =================================================================== -->
+  <xacro:macro name="station2_camara" params="prefijo">
+    <gazebo reference="${prefijo}camara_link">
+      <sensor name="camara_inspeccion" type="camera">
+        <always_on>true</always_on>
+        <update_rate>5</update_rate>
+        <visualize>false</visualize>
+        <topic>/station2/camara/image</topic>
+        <gz_frame_id>${prefijo}camara_optica</gz_frame_id>
+        <camera>
+          <horizontal_fov>${cam_hfov}</horizontal_fov>
+          <image>
+            <width>${cam_ancho}</width>
+            <height>${cam_alto}</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>2.0</far>
+          </clip>
+          <camera_info_topic>/station2/camara/camera_info</camera_info_topic>
+        </camera>
+      </sensor>
+    </gazebo>
+    <gazebo>
+      <plugin filename="gz-sim-sensors-system"
+              name="gz::sim::systems::Sensors">
+        <render_engine>ogre2</render_engine>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+</robot>
