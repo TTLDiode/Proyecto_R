@@ -49,6 +49,22 @@ PUNTOS = {
 # Mordaza: lo que se cierra cada dedo desde la apertura maxima de 60 mm.
 DEDO_ABIERTO = 0.0
 DEDO_CERRADO = 0.0195          # 21 mm entre caras, pieza de 20 mm
+APERTURA_MAX = 0.060
+LADO_PIEZA = 0.020
+HOLGURA = 0.001
+
+
+def cierre_para(giro):
+    """Cierre de cada dedo para una pieza cuadrada girada 'giro' (rad)
+    respecto a la pinza.
+
+    El SCARA no tiene muneca: la pinza queda girada theta1 + theta2 y la pieza
+    llega con el giro que le dio la Estacion 1 (0 en line_poses.yaml). Girada,
+    la pieza mide lado * (|cos| + |sen|) en la direccion de cierre (28 mm a 36
+    grados), y los dedos se detienen ahi, en las esquinas, sin atravesarla.
+    """
+    ancho = LADO_PIEZA * (abs(math.cos(giro)) + abs(math.sin(giro)))
+    return (APERTURA_MAX - ancho - HOLGURA) / 2.0
 
 
 class ControlPuntoAPunto(Node):
@@ -177,8 +193,8 @@ class ControlPuntoAPunto(Node):
     def abrir_mordaza(self):
         return self.mover_mordaza(DEDO_ABIERTO)
 
-    def cerrar_mordaza(self):
-        return self.mover_mordaza(DEDO_CERRADO)
+    def cerrar_mordaza(self, cierre=DEDO_CERRADO):
+        return self.mover_mordaza(cierre)
 
     def mover_a_punto(self, punto, rama='auto', **kw):
         """Lleva tool0 a un punto del frame world y mide el error real."""
