@@ -71,12 +71,14 @@ Visualization Manager:
     Current:
       Class: rviz_default_plugins/Orbit
       Name: Current View
-      Distance: 0.75
-      Yaw: 0.9
-      Pitch: 0.6
+      # Vista desde el frente de la base (-y, lado del grabado), con +x (la
+      # PCB) a la derecha, centrada en la base, que va en el origen.
+      Distance: 1.0
+      Yaw: -1.2
+      Pitch: 0.55
       Focal Point:
-        X: 0.55
-        Y: 0.0
+        X: 0.05
+        Y: 0.05
         Z: 0.10
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05

@@ -19,8 +19,10 @@
 
   Todos los frames llevan el prefijo de la estacion, segun ADR-005.
 
-  Geometria de colision simplificada a cajas y cilindros. Las mallas del CAD,
-  cuando esten en meshes/, solo sustituyen la parte visual.
+  Visual con las mallas STL del CAD v5.7 (meshes/, exportadas de Fusion por
+  cad/station2/urdf_cad/scripts/mallas_fusion.py en la pose cero, en metros y
+  en el marco de cada eslabon). Con mallas:=false se vuelve a los solidos
+  simples. La colision sigue siendo de cajas y cilindros.
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="station2">
 
@@ -40,6 +42,8 @@
   <!-- Camara simulada. Necesita el sistema de sensores de Gazebo con un motor
        de render; con camara:=false el modelo queda igual pero sin sensor. -->
   <xacro:arg name="camara" default="true"/>
+  <!-- Visual con las mallas del CAD (true) o con solidos simples (false). -->
+  <xacro:arg name="mallas" default="true"/>
 
   <material name="acrilico"> <color rgba="0.85 0.88 0.92 0.80"/></material>
   <material name="acrilico_negro"> <color rgba="0.10 0.10 0.12 1.0"/></material>
@@ -47,6 +51,24 @@
   <material name="metal">    <color rgba="0.62 0.62 0.65 1.0"/></material>
   <material name="motor">    <color rgba="0.20 0.20 0.22 1.0"/></material>
   <material name="pcb">      <color rgba="0.05 0.35 0.15 1.0"/></material>
+  <material name="cad_base"> <color rgba="0.78 0.82 0.88 1.0"/></material>
+  <material name="cad_brazo"><color rgba="0.93 0.76 0.20 1.0"/></material>
+  <material name="cad_mordaza"><color rgba="0.92 0.92 0.92 1.0"/></material>
+
+  <!-- Visual con la malla del CAD; el origen va en el marco del eslabon.
+       Ruta file:// absoluta (la resuelve xacro): asi la encuentran RViz y
+       Gazebo sin tocar GZ_SIM_RESOURCE_PATH, tambien cuando la estacion se
+       anade al Gazebo de la Estacion 1 (simulacion_en_linea.launch.py). -->
+  <xacro:property name="ruta_mallas" value="file://$(find station2_description)/meshes"/>
+  <xacro:macro name="malla" params="nombre material xyz:='0 0 0'">
+    <visual>
+      <origin xyz="${xyz}"/>
+      <geometry>
+        <mesh filename="${ruta_mallas}/${nombre}.stl"/>
+      </geometry>
+      <material name="${material}"/>
+    </visual>
+  </xacro:macro>
 
   <!-- Alturas derivadas -->
   <xacro:property name="z_base_sup" value="${patas_z + base_z}"/>
@@ -57,10 +79,15 @@
   <!-- ==================================================================
        base_link: placa de acrilico de 300 x 300 sobre patas de goma, torre
        en cajon de acrilico con el lazy susan de theta1 arriba, motor de
-       theta1 en el piso por detras y la PCB de control en la zona +y.
+       theta1 en el piso por detras (-y) y la PCB de control en la zona +x,
+       como en el CAD.
        Es fijo al mundo; su masa cuenta para el balance de la estacion.
   =================================================================== -->
   <link name="${p}base_link">
+    <xacro:if value="$(arg mallas)">
+      <xacro:malla nombre="base_link" material="cad_base"/>
+    </xacro:if>
+    <xacro:unless value="$(arg mallas)">
     <visual>
       <origin xyz="0 0 ${patas_z + base_z/2}"/>
       <geometry><box size="${base_x} ${base_y} ${base_z}"/></geometry>
@@ -71,18 +98,19 @@
       <geometry><box size="${torre_lado} ${torre_lado} ${altura_theta1 - z_base_sup}"/></geometry>
       <material name="acrilico"/>
     </visual>
-    <!-- Motor de theta1 en el piso, 59 mm por detras del eje -->
+    <!-- Motor de theta1 en el piso, 59 mm por detras del eje (-y) -->
     <visual>
-      <origin xyz="-0.059 0 ${z_base_sup + motor_largo/2}"/>
+      <origin xyz="0 -0.059 ${z_base_sup + motor_largo/2}"/>
       <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
       <material name="motor"/>
     </visual>
-    <!-- PCB de control, 100 x 99 mm, sobre separadores en la zona +y -->
+    <!-- PCB de control, 99.8 x 98.7 mm, sobre separadores en la zona +x -->
     <visual>
-      <origin xyz="0 0.095 ${z_base_sup + 0.012}"/>
-      <geometry><box size="0.100 0.099 0.002"/></geometry>
+      <origin xyz="0.095 0 ${z_base_sup + 0.012}"/>
+      <geometry><box size="0.099 0.100 0.002"/></geometry>
       <material name="pcb"/>
     </visual>
+    </xacro:unless>
 
     <collision>
       <origin xyz="0 0 ${(patas_z + base_z)/2}"/>
@@ -137,6 +165,10 @@
        coaxial con theta1, y en el codo el eje con dos 688 y el lazy susan.
   =================================================================== -->
   <link name="${p}link_1">
+    <xacro:if value="$(arg mallas)">
+      <xacro:malla nombre="link_1" material="cad_brazo"/>
+    </xacro:if>
+    <xacro:unless value="$(arg mallas)">
     <visual>
       <origin xyz="${(l1+2*cola)/2 - cola} 0 ${brazo_espesor/2}"/>
       <geometry><box size="${l1 + 2*cola} ${brazo_ancho} ${brazo_espesor}"/></geometry>
@@ -147,6 +179,7 @@
       <geometry><cylinder radius="${motor_diametro/2}" length="${motor_largo}"/></geometry>
       <material name="motor"/>
     </visual>
+    </xacro:unless>
     <collision>
       <origin xyz="${(l1+2*cola)/2 - cola} 0 ${brazo_espesor/2}"/>
       <geometry><box size="${l1 + 2*cola} ${brazo_ancho} ${brazo_espesor}"/></geometry>
@@ -177,6 +210,10 @@
        colgando por debajo.
   =================================================================== -->
   <link name="${p}link_2">
+    <xacro:if value="$(arg mallas)">
+      <xacro:malla nombre="link_2" material="cad_brazo"/>
+    </xacro:if>
+    <xacro:unless value="$(arg mallas)">
     <visual>
       <origin xyz="${(l2+2*cola)/2 - cola} 0 ${brazo_espesor/2}"/>
       <geometry><box size="${l2 + 2*cola} ${brazo_ancho} ${brazo_espesor}"/></geometry>
@@ -209,6 +246,7 @@
       <geometry><box size="0.025 0.024 0.008"/></geometry>
       <material name="pcb"/>
     </visual>
+    </xacro:unless>
 
     <collision>
       <origin xyz="${(l2+2*cola)/2 - cola} 0 ${brazo_espesor/2}"/>
@@ -245,6 +283,10 @@
        con el servo SG90, el piñon y las dos cremalleras.
   =================================================================== -->
   <link name="${p}link_3">
+    <xacro:if value="$(arg mallas)">
+      <xacro:malla nombre="link_3" material="cad_mordaza"/>
+    </xacro:if>
+    <xacro:unless value="$(arg mallas)">
     <visual>
       <origin xyz="0 0 ${dedo_largo + pinza_z + largo_vastago/2}"/>
       <geometry><cylinder radius="${vastago_radio}" length="${largo_vastago}"/></geometry>
@@ -255,6 +297,7 @@
       <geometry><box size="${pinza_y} ${pinza_x} ${pinza_z}"/></geometry>
       <material name="pla"/>
     </visual>
+    </xacro:unless>
     <collision>
       <origin xyz="0 0 ${dedo_largo + pinza_z/2}"/>
       <geometry><box size="${pinza_y} ${pinza_x} ${pinza_z}"/></geometry>
@@ -280,11 +323,19 @@
       <dynamics damping="0.5" friction="0.1"/>
     </joint>
     <link name="${p}${nombre}">
+      <!-- La malla esta en el marco de link_3 (pinza abierta): se deshace
+           el desplazamiento del origen del dedo. -->
+      <xacro:if value="$(arg mallas)">
+        <xacro:malla nombre="${nombre}" material="cad_mordaza"
+                     xyz="0 ${-signo * (luz_abierta/2 + dedo_y/2)} 0"/>
+      </xacro:if>
+      <xacro:unless value="$(arg mallas)">
       <visual>
         <origin xyz="0 0 ${dedo_largo/2 - dedo_bajo_tool}"/>
         <geometry><box size="${dedo_x} ${dedo_y} ${dedo_largo}"/></geometry>
         <material name="pla"/>
       </visual>
+      </xacro:unless>
       <collision>
         <origin xyz="0 0 ${dedo_largo/2 - dedo_bajo_tool}"/>
         <geometry><box size="${dedo_x} ${dedo_y} ${dedo_largo}"/></geometry>
