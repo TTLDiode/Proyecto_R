@@ -1,0 +1,12 @@
+robot name is: station2
+---------- Successfully Parsed XML ---------------
+root Link: world has 1 child(ren)
+    child(1):  station2/base_link
+        child(1):  station2/link_1
+            child(1):  station2/link_2
+                child(1):  station2/camara_link
+                    child(1):  station2/camara_optica
+                child(2):  station2/link_3
+                    child(1):  station2/dedo_1
+                    child(2):  station2/dedo_2
+                    child(3):  station2/tool0
