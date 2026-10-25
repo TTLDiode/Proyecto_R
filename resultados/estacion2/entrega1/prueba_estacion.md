@@ -4,8 +4,8 @@ Generado por `ros2 run station2_control prueba_estacion`. Pieza colocada en el t
 
 | pieza | categoria esperada | categoria asignada | ciclo (s) | posicion final (m) | error en planta (mm) | error en altura (mm) |
 |---|---|---|---|---|---|---|
-| pieza_roja | A | A | 25.0 | (0.720000, 0.000000, 0.048000) | 0.000 | 0.000 |
-| pieza_verde | B | B | 25.3 | (0.720000, 0.000000, 0.048001) | 0.000 | 0.001 |
-| pieza_azul | C | C | 25.4 | (0.720000, 0.000000, 0.048000) | 0.000 | 0.000 |
+| pieza_roja | A | A | 27.3 | (0.720000, -0.000000, 0.048000) | 0.000 | 0.000 |
+| pieza_verde | B | B | 27.1 | (0.720000, -0.000000, 0.048000) | 0.000 | 0.000 |
+| pieza_azul | C | C | 27.0 | (0.718810, -0.001959, 0.048000) | 2.292 | 0.000 |
 
-Clasificacion correcta: 3 de 3. Peor error de posicionamiento en planta: 0.000 mm (limite de la guia: 20 mm).
+Clasificacion correcta: 3 de 3. Peor error de posicionamiento en planta: 2.292 mm (limite de la guia: 20 mm).
