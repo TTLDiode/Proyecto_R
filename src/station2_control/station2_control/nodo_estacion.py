@@ -42,7 +42,11 @@ from std_msgs.msg import Empty
 from std_srvs.srv import Trigger
 
 from station2_control import cinematica as cin
-from station2_control.punto_a_punto import PUNTOS, ControlPuntoAPunto
+from station2_control.punto_a_punto import (DEDO_CERRADO, PUNTOS,
+                                            ControlPuntoAPunto, cierre_para)
+
+# Giro de la pieza en el traspaso 1-2 (yaw de handoff_1_2 en line_poses.yaml).
+GIRO_PIEZA_12 = 0.0
 
 # Altura de aproximacion sobre cada punto de trabajo. La pieza mide 12 mm y
 # quedan 8 mm de holgura al desplazarse en horizontal, como en la Estacion 1.
@@ -94,6 +98,7 @@ class NodoEstacion2(ControlPuntoAPunto):
             StartTask, '/line/station2/start', self._al_pedir_inicio,
             callback_group=grupo)
         self._acople = {}
+        self._cierre = DEDO_CERRADO
         self.get_logger().info('Estacion 2 lista, esperando en '
                                '/line/station2/start')
 
@@ -125,6 +130,12 @@ class NodoEstacion2(ControlPuntoAPunto):
         self._estado_linea = StationState.BUSY
         try:
             pieza = self.get_parameter('pieza').value
+            # La pieza llega con giro 0 (handoff_1_2) y la pinza esta girada
+            # theta1 + theta2 en el traspaso 1-2. Ese giro relativo se
+            # conserva durante todo el ciclo (la pieza gira con la pinza), asi
+            # que el cierre se calcula una vez.
+            q12, _, _ = cin.inversa(cin.a_base(PUNTOS['traspaso_12']), 'arriba')
+            self._cierre = cierre_para(GIRO_PIEZA_12 - cin.guinada(q12))
             self._detalle = 'recogiendo en el traspaso 1-2'
             self._coger(PUNTOS['traspaso_12'], pieza, rama='arriba')
             err_12 = self._error_herramienta_pendiente
@@ -189,7 +200,7 @@ class NodoEstacion2(ControlPuntoAPunto):
         self._ir_a_punto(arriba, 'aproximacion', rama)
         self._ir_a_punto(bajo, 'descenso a coger', rama)
         self._error_herramienta_pendiente = self._medir(bajo)
-        self.cerrar_mordaza()
+        self.cerrar_mordaza(self._cierre)
         self._acoplar(pieza)
         self._ir_a_punto(arriba, 'ascenso con la pieza', rama)
 

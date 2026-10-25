@@ -26,8 +26,8 @@ La colisión sigue siendo de cajas y cilindros.
 | `rviz_display.png` | `ros2 launch station2_description display.launch.py`: base en el origen, centrada en la rejilla, y brazo en la pose de reposo (θ1 = 90°, hacia +y). Vista desde el frente (−y, lado del grabado y del motor de θ1), con la PCB (+x) a la derecha |
 | `arbol_tf.pdf` / `.png` | `ros2 run tf2_tools view_frames` con el modelo abierto. El árbol es world → base_link → link_1 → link_2, y de link_2 cuelgan link_3 (dedo_1, dedo_2, tool0) y camara_link → camara_optica. Cada eslabón lleva además su `<eslabon>_acrilico` fijo. Con θ1 = 90°, tool0 está en (0, 0.300, 0.120) |
 | `gazebo_spawn.png` | `ros2 launch station2_description simulacion.launch.py`: la estación en su sitio de la línea, world (0.5, 0, 0) según `line_poses.yaml`, en reposo, con las tres piezas de prueba y los soportes. Se activan joint_state_broadcaster, brazo_controller y mordaza_controller |
-| `prueba_estacion.md` | `ros2 run station2_control prueba_estacion` con el modelo de colores y la bajada de agarre corregida: 3 de 3 piezas bien clasificadas, peor error en planta de 2.3 mm (límite: 20 mm) y ciclos de unos 27 s |
-| `gazebo_agarre.png` | Primer plano en Gazebo al coger la pieza en el traspaso 1-2: el cubo va entre los dedos, con las gomas en sus caras |
+| `prueba_estacion.md` | `ros2 run station2_control prueba_estacion` con el modelo de colores y la bajada de agarre corregida: 3 de 3 piezas bien clasificadas, error en planta de 0.000 mm (límite: 20 mm) y ciclos de unos 27 s |
+| `gazebo_agarre.png` | Primer plano en Gazebo al coger la pieza en el traspaso 1-2: el cubo va entre los dedos, sin atravesarlo: la pinza cierra a lo que mide el cubo girado respecto a ella (36.2°, unos 29 mm), porque el SCARA no tiene muñeca |
 | `rviz_primeros_planos.png` | Primeros planos en RViz2 de la PCB, la mordaza con el servo, la torre de θ1 y el codo |
 | `hoja_contacto/` | Las 381 piezas distintas del STEP, teseladas, para revisarlas una a una |
 

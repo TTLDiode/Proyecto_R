@@ -51,9 +51,10 @@ Z_PIEZA = 0.048
 MUNDO = 'line'
 
 
-def gz_mover(nombre, x, y, z):
+def gz_mover(nombre, x, y, z, yaw=0.0):
     req = ('name: "%s", position: {x: %f, y: %f, z: %f}, '
-           'orientation: {w: 1}' % (nombre, x, y, z))
+           'orientation: {z: %f, w: %f}' % (nombre, x, y, z,
+                                            math.sin(yaw / 2), math.cos(yaw / 2)))
     subprocess.run(['gz', 'service', '-s', '/world/%s/set_pose' % MUNDO,
                     '--reqtype', 'gz.msgs.Pose', '--reptype', 'gz.msgs.Boolean',
                     '--timeout', '3000', '--req', req],
