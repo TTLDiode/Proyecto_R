@@ -26,7 +26,30 @@ La colisión sigue siendo de cajas y cilindros.
 | `rviz_display.png` | `ros2 launch station2_description display.launch.py`: base en el origen, centrada en la rejilla, y brazo en la pose de reposo (θ1 = 90°, hacia +y). Vista desde el frente (−y, lado del grabado y del motor de θ1), con la PCB (+x) a la derecha |
 | `arbol_tf.pdf` / `.png` | `ros2 run tf2_tools view_frames` con el modelo abierto. El árbol es world → base_link → link_1 → link_2, y de link_2 cuelgan link_3 (dedo_1, dedo_2, tool0) y camara_link → camara_optica. Cada eslabón lleva además su `<eslabon>_acrilico` fijo. Con θ1 = 90°, tool0 está en (0, 0.300, 0.120) |
 | `gazebo_spawn.png` | `ros2 launch station2_description simulacion.launch.py`: la estación en su sitio de la línea, world (0.5, 0, 0) según `line_poses.yaml`, en reposo, con las tres piezas de prueba y los soportes. Se activan joint_state_broadcaster, brazo_controller y mordaza_controller |
-| `prueba_estacion.md` | `ros2 run station2_control prueba_estacion` con el modelo de colores: 3 de 3 piezas bien clasificadas, error en planta de 0.000 mm y ciclos de unos 25 s |
+| `prueba_estacion.md` | `ros2 run station2_control prueba_estacion` con el modelo de colores y la bajada de agarre corregida: 3 de 3 piezas bien clasificadas, peor error en planta de 2.3 mm (límite: 20 mm) y ciclos de unos 27 s |
+| `gazebo_agarre.png` | Primer plano en Gazebo al coger la pieza en el traspaso 1-2: el cubo va entre los dedos, con las gomas en sus caras |
+| `rviz_primeros_planos.png` | Primeros planos en RViz2 de la PCB, la mordaza con el servo, la torre de θ1 y el codo |
+| `hoja_contacto/` | Las 381 piezas distintas del STEP, teseladas, para revisarlas una a una |
+
+## Correcciones del 25/10/2026
+
+- **Piezas con puntas**: la simplificación de triángulos deformaba las piezas
+  curvas (husillo, condensadores, borneras, bobina, poleas, tornillos, PLA). Se
+  quitó. Las mallas salen del teselado del STEP sin simplificar, y se
+  comprobaron los 994 cuerpos contra su sólido: el área coincide con un error
+  máximo del 0,8 % (`scripts/verificar_mallas.py`). La hoja de contacto se
+  revisó a ojo. Para aligerar, solo se quitan las vías, el cobre de abajo y las
+  paredes de 35 µm de las capas de las placas, que no se ven. Quedan 560 000
+  triángulos y unos 31 MB; Gazebo va a tiempo real (RTF ≈ 1.0).
+- **La pieza viajaba por debajo de los dedos**: el nodo bajaba tool0 (las
+  puntas de los dedos) hasta z = 0.060, la altura de los traspasos, pero la
+  pieza de 12 mm está apoyada en el soporte de z 0.042 a 0.054. El acople de
+  Gazebo la fijaba 6 mm por debajo de los dedos. Ahora, al coger y al soltar,
+  las puntas bajan 16 mm más, hasta 2 mm sobre el soporte (`AGARRE` en
+  `nodo_estacion.py`, d3 = 76 mm), y las gomas de los dedos (12 mm de alto)
+  quedan sobre las caras del cubo. Los puntos de la línea y el DH no cambian.
+- **RViz**: el TF se muestra sin nombres ni flechas y con ejes pequeños, para
+  que no tape el robot.
 
 ## Correcciones del 24/10/2026
 

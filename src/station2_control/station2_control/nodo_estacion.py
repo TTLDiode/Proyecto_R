@@ -48,6 +48,15 @@ from station2_control.punto_a_punto import PUNTOS, ControlPuntoAPunto
 # quedan 8 mm de holgura al desplazarse en horizontal, como en la Estacion 1.
 APROXIMACION = 0.020
 
+# Bajada extra para coger y soltar. Los puntos de traspaso (z = 0.060) son la
+# altura de referencia de la linea; la pieza, de 12 mm, esta apoyada en el
+# soporte con su centro a z = 0.048 (de 0.042 a 0.054). tool0 son las puntas
+# de los dedos, que suben 26 mm desde ahi: para que los dedos abracen la
+# pieza, las puntas bajan hasta 2 mm sobre el soporte (z = 0.044, d3 = 76 mm).
+# El acople de Gazebo fija la pieza en la pose que tiene al acoplar; con la
+# bajada a 0.060 la pieza quedaba colgando 6 mm por debajo de los dedos.
+AGARRE = 0.016
+
 # Espera para que la camara entregue una imagen tomada ya en la pose de
 # inspeccion: la camara simulada da unas 2-5 imagenes por segundo.
 ASENTAMIENTO_CAMARA = 1.5
@@ -175,19 +184,21 @@ class NodoEstacion2(ControlPuntoAPunto):
 
     def _coger(self, punto, pieza, rama='auto'):
         arriba = (punto[0], punto[1], punto[2] + APROXIMACION)
+        bajo = (punto[0], punto[1], punto[2] - AGARRE)
         self.abrir_mordaza()
         self._ir_a_punto(arriba, 'aproximacion', rama)
-        self._ir_a_punto(punto, 'descenso a coger', rama)
-        self._error_herramienta_pendiente = self._medir(punto)
+        self._ir_a_punto(bajo, 'descenso a coger', rama)
+        self._error_herramienta_pendiente = self._medir(bajo)
         self.cerrar_mordaza()
         self._acoplar(pieza)
         self._ir_a_punto(arriba, 'ascenso con la pieza', rama)
 
     def _soltar(self, punto, pieza, rama='auto'):
         arriba = (punto[0], punto[1], punto[2] + APROXIMACION)
+        bajo = (punto[0], punto[1], punto[2] - AGARRE)
         self._ir_a_punto(arriba, 'traslado', rama)
-        self._ir_a_punto(punto, 'descenso a soltar', rama)
-        self._error_herramienta_pendiente = self._medir(punto)
+        self._ir_a_punto(bajo, 'descenso a soltar', rama)
+        self._error_herramienta_pendiente = self._medir(bajo)
         # Primero se suelta el acople y despues se abre la mordaza.
         self._desacoplar(pieza)
         self.abrir_mordaza()
