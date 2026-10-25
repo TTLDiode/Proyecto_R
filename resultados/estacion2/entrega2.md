@@ -207,3 +207,36 @@ ros2 run station2_control comparar_moveit --salida resultados/estacion2
 # modelo en RViz2
 ros2 launch station2_description display.launch.py
 ```
+
+---
+
+## Códigos de clase (cinemática con los programas del curso)
+
+Los dos programas de clase se adaptaron a la Estación 2. Solo cambian la
+tabla DH y los puntos evaluados:
+
+- `matlab/station2/e2_dk_TH_DH.m`, a partir de `ri_dk_ms3r_TH_DH.m`.
+  Directa con la tabla DH en la convención del código de clase (DH
+  modificado, mm): `[0 0 114 θ1; 160 0 6 θ2; 140 π d3 0; 0 0 0 0]`.
+- `matlab/station2/e2_ik_geometrico_trayectoria.m`, a partir de
+  `ri_dk_ik_ms3r_trajectory.m`. Inversa geométrica: θ2 por la ley de cosenos,
+  θ1 resolviendo `A·X = B` y `d3 = d1 + d2 − z`, con trayectoria animada.
+
+Contraste en los cinco puntos de la tabla de MoveIt
+(`verificacion_codigos_clase.md`):
+
+- Directa: llega al objetivo con un error de 0.005 a 0.022 mm, debido al
+  redondeo de los ángulos de entrada.
+- Inversa: coincide con MoveIt con una diferencia máxima de 0.006°.
+
+## Demostración del movimiento punto a punto
+
+Video: `entrega2/punto_a_punto_propio_y_moveit.mp4` (26 s, Gazebo, modelo con
+las mallas del CAD). Grabado mientras corría `comparar_moveit`. En cada punto,
+el robot va primero con el código propio (inversa geométrica y perfil
+trapezoidal) y después con MoveIt (KDL y OMPL), volviendo al reposo entre uno
+y otro.
+
+La tabla de esa corrida está en `comparacion_moveit_vs_propia.md`
+(25/10/2026). El error final medido en el TF es menor de 0.06 mm con el código
+propio y menor de 0.5 mm con MoveIt.
