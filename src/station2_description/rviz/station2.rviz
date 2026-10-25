@@ -45,14 +45,16 @@ Visualization Manager:
       Collision Enabled: false
       TF Prefix: ""
       Update Interval: 0
+    # Ejes pequenos y sin nombres ni flechas, para que no tapen el robot.
+    # Para ver los nombres: TF > Show Names.
     - Class: rviz_default_plugins/TF
       Name: TF
       Enabled: true
       Value: true
-      Marker Scale: 0.08
-      Show Arrows: true
+      Marker Scale: 0.03
+      Show Arrows: false
       Show Axes: true
-      Show Names: true
+      Show Names: false
       Frame Timeout: 15
       Update Interval: 0
   # Sin este bloque la barra de herramientas queda vacia y el raton no

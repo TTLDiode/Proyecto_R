@@ -42,13 +42,17 @@ GALVANIZADO = (0.72, 0.73, 0.75, 1.0)
 POCO_VISIBLE = ('pcb_copper', 'pcb_via', 'SILKSCREEN', 'SOLDERMASK', 'ATMEL', 'HIROSE', 'FCI_', 'Dielectric',
                 'husillo_Tr8', 'Rodamiento', 'MURATA', 'CAPC', 'RESC', 'SOT', 'OSC_', 'AP3445', 'BOURNS',
                 '2023_06_14', 'Polea 20T')
+# Cuerpos que no se ven desde fuera (dentro de la PCB o bajo la placa de la camara).
+OCULTAS = ('pcb_via', 'SILKSCREEN_BOTTOM', 'SOLDERMASK_BOTTOM')
+# Capas finas de las placas (cobre, serigrafia, mascara).
+CAPAS = ('pcb_copper', 'SILKSCREEN_TOP', 'SOLDERMASK_TOP')
 # Piezas que se ven mucho: se simplifican poco.
 MUY_VISIBLE = ('37d-gearmotor', 'SG90', 'Polea 60T')
 ZINCADOS = ('DIN 125', 'DIN 934', 'DIN 985', 'DIN 439', 'DIN 9021', 'ISO 7380', 'ISO 10642')
 
 
 def color_de(pieza, col):
-    base = re.sub(r':\d+$', '', pieza)
+    base = re.sub(r':\d+$', '', pieza.split('#')[0])
     rgb = col[:3]
     if any(base.startswith(z) for z in ZINCADOS):
         return GALVANIZADO
@@ -121,10 +125,27 @@ def main():
     os.makedirs(sal, exist_ok=True)
     # 1. a pose cero y al marco de cada eslabon, en metros; color final
     por_link = defaultdict(list)           # link -> [(pieza, rgba, tri)]
+    # plano medio de la PCB de control: el cobre de debajo no se ve
+    pcb = [t for (p, c), t in datos['base_fija:1'].items() if p.startswith('pcb_PCB')]
+    z_pcb = np.concatenate(pcb)[:, :, 2].mean() if pcb else None
     for g, piezas in datos.items():
         link, (ox, oy, oz), girar = GRUPOS[g]
         for (pieza, col), tri in piezas.items():
+            if any(pieza.startswith(x) for x in OCULTAS):
+                continue
             t = tri.copy()
+            if pieza.startswith('pcb_copper') and z_pcb is not None:
+                t = t[t[:, :, 2].mean(1) > z_pcb]
+            if any(pieza.startswith(x) for x in CAPAS):
+                # capa de 35 um: solo la cara de fuera (sin paredes ni la cara
+                # pegada a la placa, que no se ven)
+                n = np.cross(t[:, 1] - t[:, 0], t[:, 2] - t[:, 0])
+                n /= np.linalg.norm(n, axis=1, keepdims=True) + 1e-12
+                zc = t[:, :, 2].mean(1)
+                arriba = (n[:, 2] > 0.9) & (zc > zc.max() - 0.01)
+                abajo = (n[:, 2] < -0.9) & (zc < zc.min() + 0.01)
+                fuera = arriba if pieza.startswith('pcb_copper') else (arriba | abajo)
+                t = t[fuera]
             if girar:                       # reposo (theta1 = 90) -> pose cero
                 t = np.stack([t[..., 1], -t[..., 0], t[..., 2]], axis=-1)
             t = (t - np.array([ox, oy, oz])) / 1000.0
@@ -140,6 +161,7 @@ def main():
         total = sum(len(t) for _, _, t in lista)
 
         def objetivo(pieza, n, k):
+            return n                         # sin simplificar: deformaba las piezas curvas
             if pieza.endswith('/grabado') or pieza.startswith('placa_base') or n < 200:
                 return n
             if any(x in pieza for x in MUY_VISIBLE):
