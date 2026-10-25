@@ -19,10 +19,13 @@
 
   Todos los frames llevan el prefijo de la estacion, segun ADR-005.
 
-  Visual con las mallas STL del CAD v5.7 (meshes/, exportadas de Fusion por
-  cad/station2/urdf_cad/scripts/mallas_fusion.py en la pose cero, en metros y
-  en el marco de cada eslabon). Con mallas:=false se vuelve a los solidos
-  simples. La colision sigue siendo de cajas y cilindros.
+  Visual con las mallas del CAD v5.7 con los colores de cada pieza (meshes/,
+  sacadas del STEP del ensamble por scripts/step_a_mallas.py y
+  scripts/mallas_dae.py, en la pose cero, en metros y en el marco de cada
+  eslabon): Collada para las piezas opacas y STL para el acrilico, que va en
+  un eslabon solo visual *_acrilico con color transparente. Con
+  mallas:=false se vuelve a los solidos simples. La colision sigue siendo de
+  cajas y cilindros.
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="station2">
 
@@ -51,23 +54,44 @@
   <material name="metal">    <color rgba="0.62 0.62 0.65 1.0"/></material>
   <material name="motor">    <color rgba="0.20 0.20 0.22 1.0"/></material>
   <material name="pcb">      <color rgba="0.05 0.35 0.15 1.0"/></material>
-  <material name="cad_base"> <color rgba="0.78 0.82 0.88 1.0"/></material>
-  <material name="cad_brazo"><color rgba="0.93 0.76 0.20 1.0"/></material>
-  <material name="cad_mordaza"><color rgba="0.92 0.92 0.92 1.0"/></material>
+  <!-- Acrilico claro de corte laser, como el 'Acrilico, claro' de Fusion. -->
+  <material name="acrilico_claro"><color rgba="0.82 0.91 0.96 0.35"/></material>
 
-  <!-- Visual con la malla del CAD; el origen va en el marco del eslabon.
+  <!-- Visual con la malla del CAD (Collada con los colores y materiales de
+       cada pieza); el origen va en el marco del eslabon.
        Ruta file:// absoluta (la resuelve xacro): asi la encuentran RViz y
        Gazebo sin tocar GZ_SIM_RESOURCE_PATH, tambien cuando la estacion se
        anade al Gazebo de la Estacion 1 (simulacion_en_linea.launch.py). -->
   <xacro:property name="ruta_mallas" value="file://$(find station2_description)/meshes"/>
-  <xacro:macro name="malla" params="nombre material xyz:='0 0 0'">
+  <xacro:macro name="malla" params="nombre xyz:='0 0 0'">
     <visual>
       <origin xyz="${xyz}"/>
       <geometry>
-        <mesh filename="${ruta_mallas}/${nombre}.stl"/>
+        <mesh filename="${ruta_mallas}/${nombre}.dae"/>
       </geometry>
-      <material name="${material}"/>
+      <!-- Sin <material>: los colores van en la malla (uno por pieza). -->
     </visual>
+  </xacro:macro>
+
+  <!-- Piezas de acrilico de cada eslabon, en un eslabon solo visual unido con
+       una junta fija. RViz no lee la opacidad de las mallas Collada y aplica
+       una sola opacidad a todo el eslabon, asi que el acrilico transparente
+       necesita su propio eslabon. Sin inercia: Gazebo lo funde con el padre. -->
+  <xacro:macro name="acrilico" params="nombre xyz:='0 0 0'">
+    <joint name="${p}${nombre}_acrilico_joint" type="fixed">
+      <parent link="${p}${nombre}"/>
+      <child  link="${p}${nombre}_acrilico"/>
+      <origin xyz="0 0 0"/>
+    </joint>
+    <link name="${p}${nombre}_acrilico">
+      <visual>
+        <origin xyz="${xyz}"/>
+        <geometry>
+          <mesh filename="${ruta_mallas}/${nombre}_acrilico.stl"/>
+        </geometry>
+        <material name="acrilico_claro"/>
+      </visual>
+    </link>
   </xacro:macro>
 
   <!-- Alturas derivadas -->
@@ -85,7 +109,7 @@
   =================================================================== -->
   <link name="${p}base_link">
     <xacro:if value="$(arg mallas)">
-      <xacro:malla nombre="base_link" material="cad_base"/>
+      <xacro:malla nombre="base_link"/>
     </xacro:if>
     <xacro:unless value="$(arg mallas)">
     <visual>
@@ -123,6 +147,9 @@
 
     <xacro:inercia_cad masa="${m_base}" centro="${c_base}" tensor="${i_base}"/>
   </link>
+  <xacro:if value="$(arg mallas)">
+    <xacro:acrilico nombre="base_link"/>
+  </xacro:if>
 
   <!-- ==================================================================
        Anclaje al mundo. En la maquina real no hay tornillos a la mesa: el
@@ -166,7 +193,7 @@
   =================================================================== -->
   <link name="${p}link_1">
     <xacro:if value="$(arg mallas)">
-      <xacro:malla nombre="link_1" material="cad_brazo"/>
+      <xacro:malla nombre="link_1"/>
     </xacro:if>
     <xacro:unless value="$(arg mallas)">
     <visual>
@@ -190,6 +217,9 @@
     </collision>
     <xacro:inercia_cad masa="${m_link1}" centro="${c_link1}" tensor="${i_link1}"/>
   </link>
+  <xacro:if value="$(arg mallas)">
+    <xacro:acrilico nombre="link_1"/>
+  </xacro:if>
 
   <!-- ==================== theta2: codo ====================
        El origen esta en la cara inferior del eslabon 2, por encima del
@@ -211,7 +241,7 @@
   =================================================================== -->
   <link name="${p}link_2">
     <xacro:if value="$(arg mallas)">
-      <xacro:malla nombre="link_2" material="cad_brazo"/>
+      <xacro:malla nombre="link_2"/>
     </xacro:if>
     <xacro:unless value="$(arg mallas)">
     <visual>
@@ -262,6 +292,9 @@
     </collision>
     <xacro:inercia_cad masa="${m_link2}" centro="${c_link2}" tensor="${i_link2}"/>
   </link>
+  <xacro:if value="$(arg mallas)">
+    <xacro:acrilico nombre="link_2"/>
+  </xacro:if>
 
   <!-- ==================== d3: desplazamiento vertical ====================
        El origen de link_3 es tool0 con d3 = 0, el punto de trabajo en lo
@@ -284,7 +317,7 @@
   =================================================================== -->
   <link name="${p}link_3">
     <xacro:if value="$(arg mallas)">
-      <xacro:malla nombre="link_3" material="cad_mordaza"/>
+      <xacro:malla nombre="link_3"/>
     </xacro:if>
     <xacro:unless value="$(arg mallas)">
     <visual>
@@ -308,6 +341,9 @@
     </collision>
     <xacro:inercia_cad masa="${m_link3}" centro="${c_link3}" tensor="${i_link3}"/>
   </link>
+  <xacro:if value="$(arg mallas)">
+    <xacro:acrilico nombre="link_3"/>
+  </xacro:if>
 
   <!-- ==================== Mordaza: dos dedos prismaticos ====================
        No son grados de libertad del brazo: los mueve el servo por el piñon y
@@ -326,7 +362,7 @@
       <!-- La malla esta en el marco de link_3 (pinza abierta): se deshace
            el desplazamiento del origen del dedo. -->
       <xacro:if value="$(arg mallas)">
-        <xacro:malla nombre="${nombre}" material="cad_mordaza"
+        <xacro:malla nombre="${nombre}"
                      xyz="0 ${-signo * (luz_abierta/2 + dedo_y/2)} 0"/>
       </xacro:if>
       <xacro:unless value="$(arg mallas)">
@@ -344,6 +380,9 @@
         <origin xyz="0 0 ${dedo_largo/2 - dedo_bajo_tool}"/>
       </xacro:inercia_componente>
     </link>
+    <xacro:if value="$(arg mallas)">
+      <xacro:acrilico nombre="${nombre}" xyz="0 ${-signo * (luz_abierta/2 + dedo_y/2)} 0"/>
+    </xacro:if>
   </xacro:macro>
   <xacro:dedo nombre="dedo_1" signo="1"/>
   <xacro:dedo nombre="dedo_2" signo="-1"/>

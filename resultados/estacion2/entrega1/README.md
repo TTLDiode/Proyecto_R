@@ -4,18 +4,38 @@ Probado el 24/10/2026 en Ubuntu 24.04, con ROS 2 Jazzy y Gazebo Harmonic, en
 la rama `estacion2-ros`. Compilación: `colcon build --packages-up-to
 station2_description station2_control`.
 
-El modelo usa como visual las mallas STL del CAD v5.7 (`station2_description/
-meshes/`). La colisión sigue siendo de cajas y cilindros.
+El visual del modelo son las mallas del CAD v5.7 con los colores y
+materiales de cada pieza (`station2_description/meshes/`, generadas desde el
+STEP del ensamble; ver `station2_description/scripts/README.md`):
+
+- acrílico claro transparente;
+- PLA blanco;
+- motores Pololu;
+- separadores de latón;
+- tornillería negra y galvanizada;
+- correas negras;
+- PCB con sus componentes;
+- grabado láser de la base: banderas, «TRÍADA», «SCARA RRP · Estación 2 ·
+  Proyecto R» y el autor.
+
+La colisión sigue siendo de cajas y cilindros.
 
 | Archivo | Qué es |
 |---|---|
-| `check_urdf.txt` | `check_urdf` sobre el URDF que genera `xacro` (`prefijo:=station2/ control:=false acople:=false camara:=false base_x:=0.0`). Sin errores: raíz `world` y 10 frames |
+| `check_urdf.txt` | `check_urdf` sobre el URDF que genera `xacro` (`prefijo:=station2/ control:=false acople:=false camara:=false`). Sin errores: raíz `world` y 16 frames, que son los 10 de la cadena más 6 `*_acrilico`, unidos con juntas fijas y solo visuales |
 | `rviz_display.png` | `ros2 launch station2_description display.launch.py`: base en el origen, centrada en la rejilla, y brazo en la pose de reposo (θ1 = 90°, hacia +y). Vista desde el frente (−y, lado del grabado y del motor de θ1), con la PCB (+x) a la derecha |
-| `arbol_tf.pdf` / `.png` | `ros2 run tf2_tools view_frames` con el display abierto. El árbol es world → base_link → link_1 → link_2, y de link_2 cuelgan link_3 (dedo_1, dedo_2, tool0) y camara_link → camara_optica. Con θ1 = 90°, tool0 está en (0, 0.300, 0.120) |
+| `arbol_tf.pdf` / `.png` | `ros2 run tf2_tools view_frames` con el modelo abierto. El árbol es world → base_link → link_1 → link_2, y de link_2 cuelgan link_3 (dedo_1, dedo_2, tool0) y camara_link → camara_optica. Cada eslabón lleva además su `<eslabon>_acrilico` fijo. Con θ1 = 90°, tool0 está en (0, 0.300, 0.120) |
 | `gazebo_spawn.png` | `ros2 launch station2_description simulacion.launch.py`: la estación en su sitio de la línea, world (0.5, 0, 0) según `line_poses.yaml`, en reposo, con las tres piezas de prueba y los soportes. Se activan joint_state_broadcaster, brazo_controller y mordaza_controller |
-| `prueba_estacion.md` | `ros2 run station2_control prueba_estacion` con el modelo de mallas: 3 de 3 piezas bien clasificadas y error en planta de 0.000 mm |
+| `prueba_estacion.md` | `ros2 run station2_control prueba_estacion` con el modelo de colores: 3 de 3 piezas bien clasificadas, error en planta de 0.000 mm y ciclos de unos 25 s |
 
 ## Correcciones del 24/10/2026
+
+- **Colores, materiales y grabado**: las mallas STL eran de un solo color. Ahora
+  salen del STEP con el color de cada pieza, en Collada. El acrílico va aparte,
+  en STL y con el color transparente del URDF, en un eslabón solo visual
+  (RViz no lee la opacidad de las mallas Collada y aplica una sola opacidad
+  por eslabón). El grabado de la base está en la geometría del STEP, a
+  0,3 mm bajo la cara de arriba, y se pinta en oscuro.
 
 - **Faltaban piezas**: el visual eran sólidos simples. Ahora lleva las mallas
   del CAD v5.7, exportadas de Fusion en la pose cero, en metros y en el marco
