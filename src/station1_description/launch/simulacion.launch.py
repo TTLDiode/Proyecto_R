@@ -1,21 +1,8 @@
 """Levanta la Estacion 1 en Gazebo con sus controladores listos para recibir
-trayectorias.
+trayectorias y el nodo logico de la estacion.
 
     ros2 launch station1_description simulacion.launch.py
     ros2 launch station1_description simulacion.launch.py gui:=false
-
-Se diferencia de spawn.launch.py, de la Entrega 1, en que aquel solo colocaba
-el modelo en el mundo. Aqui el URDF trae ademas las interfaces de
-ros2_control, de modo que el complemento gz_ros2_control arranca el
-controller_manager dentro del simulador y este lanzador solo tiene que activar
-los controladores que ya estan declarados.
-
-El orden importa y no es negociable: el modelo no existe hasta que el servicio
-de creacion de Gazebo responde, y el controller_manager no existe hasta que el
-modelo esta en el mundo. De ahi que los spawners cuelguen del evento de salida
-del proceso de creacion y no de un temporizador: un temporizador funciona en
-esta maquina y falla en otra mas lenta, que es exactamente la clase de fallo
-que aparece el dia de la sustentacion.
 """
 import os
 
@@ -54,10 +41,7 @@ def _setup(context, *args, **kwargs):
         value_type=str)
 
     # El complemento de ros2_control lo carga Gazebo, no ROS, y lo busca en
-    # GZ_SIM_SYSTEM_PLUGIN_PATH. Los paquetes de ROS 2 Jazzy instalan la
-    # biblioteca en lib/ del prefijo pero no alimentan esa variable, de modo
-    # que hay que anadirla aqui o el modelo aparece en el mundo sin
-    # controller_manager y los spawners esperan para siempre.
+    # GZ_SIM_SYSTEM_PLUGIN_PATH.
     ruta_plugins = os.path.join(get_package_prefix('gz_ros2_control'), 'lib')
     previo = os.environ.get('GZ_SIM_SYSTEM_PLUGIN_PATH', '')
     ruta_plugins = ruta_plugins + (os.pathsep + previo if previo else '')
@@ -85,20 +69,20 @@ def _setup(context, *args, **kwargs):
     brazo = spawner('brazo_controller')
     mordaza = spawner('mordaza_controller')
 
-    # El complemento DetachableJoint acopla la pieza al arrancar, aunque su
-    # documentacion diga que espera una peticion. Comprobado: sin enviar nada,
-    # la pieza queda pegada a la mordaza desde el primer instante y el brazo la
-    # arrastra por la bandeja; el contacto frena las articulaciones y el
-    # controlador aborta las trayectorias.
-    #
-    # Este aviso deja el mundo en el estado correcto, con la pieza suelta en la
-    # bandeja. Va aqui y no en el nodo de la estacion a proposito: asi cualquier
-    # nodo que mueva el brazo encuentra el mundo coherente, incluso los que no
-    # saben que existe una pieza.
+    # El complemento DetachableJoint nace acoplado. Se suelta al arrancar.
     soltar_al_arrancar = ExecuteProcess(
         cmd=['ros2', 'topic', 'pub', '--once', '/station1/pieza/detach',
              'std_msgs/msg/Empty', '{}'],
         output='screen')
+
+    # Nodo logico de la estacion (expone /line/station1/start, /done, /state)
+    nodo_estacion = Node(
+        package='station1_control',
+        executable='nodo_estacion',
+        name='nodo_estacion',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
 
     return [
         SetEnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH', ruta_plugins),
@@ -110,11 +94,7 @@ def _setup(context, *args, **kwargs):
              parameters=[{'robot_description': descripcion,
                           'use_sim_time': True}]),
 
-        # Puente del reloj de simulacion. Sin el, todo lo que use use_sim_time
-        # se queda esperando un /clock que nunca llega.
-        # Puente del reloj y de los dos avisos de acople de la pieza. Los
-        # tres cruzan la frontera entre ROS y Gazebo, que no comparten bus:
-        # el reloj entra y los avisos salen.
+        # Puente del reloj y de los avisos de acople de la pieza.
         Node(package='ros_gz_bridge', executable='parameter_bridge',
              arguments=[
                  '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
@@ -133,6 +113,9 @@ def _setup(context, *args, **kwargs):
                                            on_exit=[mordaza])),
         RegisterEventHandler(OnProcessExit(target_action=mordaza,
                                            on_exit=[soltar_al_arrancar])),
+
+        # Nodo de la estacion (se lanza junto con todo lo anterior)
+        nodo_estacion,
     ]
 
 
