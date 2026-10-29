@@ -218,9 +218,18 @@ def _setup(context, *args, **kwargs):
                                            on_exit=[mordaza])),
         RegisterEventHandler(OnProcessExit(target_action=mordaza,
                                            on_exit=soltar)),
+
+        # Nodo lógico de la estación (habla con el orquestador)
+        Node(
+            package='station2_control',
+            executable='nodo_estacion',
+            name='nodo_estacion',
+            namespace='station2',
+            output='screen',
+            parameters=[{'use_sim_time': True}],
+        ),
     ]
     return acciones
-
 
 def generate_launch_description():
     return LaunchDescription([
