@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!--
+  Descripcion semantica de la Estacion 2 (TRIADA, SCARA RRP).
+
+  Escrito a mano, como el de la Estacion 1: para una cadena de tres
+  articulaciones los pares de colision se pueden razonar exactamente.
+
+  El grupo del brazo son los tres motores (theta1, theta2, d3). La mordaza va
+  en su propio grupo: no es uno de los tres grados de libertad.
+-->
+<robot name="station2">
+
+  <group name="brazo">
+    <chain base_link="station2/base_link" tip_link="station2/tool0"/>
+  </group>
+
+  <group name="mordaza">
+    <joint name="station2/dedo_1_joint"/>
+    <joint name="station2/dedo_2_joint"/>
+  </group>
+
+  <!-- Poses con nombre. Los valores salen de la inversa propia
+       (station2_control/cinematica.py) evaluada en line_poses.yaml:
+       reposo        brazo hacia +y, fuera de los dos traspasos.
+       traspaso_12   tool0 en (0.250, 0, 0.060), codo arriba (unica rama).
+       traspaso_23   tool0 en (0.720, 0, 0.060), codo abajo (unica rama).
+       inspeccion    tool0 sobre el puesto de inspeccion (0.5, 0.2, 0.060).
+       camara        lente de la camara sobre el puesto de inspeccion.
+  -->
+  <group_state name="reposo" group="brazo">
+    <joint name="station2/joint_1" value="1.5708"/>
+    <joint name="station2/joint_2" value="0.0"/>
+    <joint name="station2/joint_3" value="0.0"/>
+  </group_state>
+
+  <group_state name="traspaso_12" group="brazo">
+    <joint name="station2/joint_1" value="2.5988"/>
+    <joint name="station2/joint_2" value="1.1743"/>
+    <joint name="station2/joint_3" value="0.0600"/>
+  </group_state>
+
+  <group_state name="traspaso_23" group="brazo">
+    <joint name="station2/joint_1" value="0.6877"/>
+    <joint name="station2/joint_2" value="-1.4993"/>
+    <joint name="station2/joint_3" value="0.0600"/>
+  </group_state>
+
+  <group_state name="inspeccion" group="brazo">
+    <joint name="station2/joint_1" value="0.8020"/>
+    <joint name="station2/joint_2" value="1.6871"/>
+    <joint name="station2/joint_3" value="0.0600"/>
+  </group_state>
+
+  <group_state name="camara" group="brazo">
+    <joint name="station2/joint_1" value="1.2443"/>
+    <joint name="station2/joint_2" value="1.0127"/>
+    <joint name="station2/joint_3" value="0.0"/>
+  </group_state>
+
+  <group_state name="abierta" group="mordaza">
+    <joint name="station2/dedo_1_joint" value="0.0"/>
+    <joint name="station2/dedo_2_joint" value="0.0"/>
+  </group_state>
+
+  <group_state name="cerrada" group="mordaza">
+    <joint name="station2/dedo_1_joint" value="0.0195"/>
+    <joint name="station2/dedo_2_joint" value="0.0195"/>
+  </group_state>
+
+  <end_effector name="efector" parent_link="station2/tool0"
+                group="mordaza" parent_group="brazo"/>
+
+  <!-- Adjacent: unidos por una articulacion, contacto permanente.
+       Los dedos cuelgan del vastago y se rozan entre si al cerrar sin pieza.
+       base_link con link_2 y link_3 se deja comprobar: con el codo plegado
+       el eslabon 2 puede llegar a la columna. -->
+  <disable_collisions link1="station2/base_link" link2="station2/link_1" reason="Adjacent"/>
+  <disable_collisions link1="station2/link_1" link2="station2/link_2" reason="Adjacent"/>
+  <disable_collisions link1="station2/link_2" link2="station2/link_3" reason="Adjacent"/>
+  <disable_collisions link1="station2/link_3" link2="station2/dedo_1" reason="Adjacent"/>
+  <disable_collisions link1="station2/link_3" link2="station2/dedo_2" reason="Adjacent"/>
+  <disable_collisions link1="station2/dedo_1" link2="station2/dedo_2" reason="Never"/>
+  <disable_collisions link1="station2/link_2" link2="station2/dedo_1" reason="Never"/>
+  <disable_collisions link1="station2/link_2" link2="station2/dedo_2" reason="Never"/>
+
+</robot>
