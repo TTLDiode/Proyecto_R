@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<!--
+  Parametros geometricos, de transmision y de masa de la Estacion 2, TRIADA.
+
+  Unidades del Sistema Internacional: metros, kilogramos, radianes, segundos.
+
+  Estructura adaptada de station1_description/urdf/parametros.xacro.
+
+  Fuente de cada cifra. Las cotas de la cadena (l1, l2, limites y recorrido
+  de d3) son las del diseno previo de la Seccion 1 y del CAD v5.x de Fusion
+  (cad/station2/fusion/Estacion2_SCARA.py). Las alturas de los ejes, la camara y
+  las masas salen de la tabla exportada del CAD (docs/estacion2/urdf-datos-cad.md).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ================== Restricciones de la guia ================== -->
+  <!-- Radio XY 320 +/- 20 mm y altura 300 +/- 20 mm. -->
+  <xacro:property name="alcance_xy"      value="0.300"/>
+  <xacro:property name="altura_estacion" value="0.310"/>
+
+  <!-- ================== Cadena cinematica RRP ===================== -->
+  <xacro:property name="l1" value="0.160"/>   <!-- eslabon 1, entre ejes -->
+  <xacro:property name="l2" value="0.140"/>   <!-- eslabon 2, codo a vastago -->
+
+  <!-- Altura del eje de theta1: cara inferior del eslabon 1, sobre el lazy
+       susan de la torre. -->
+  <xacro:property name="altura_theta1" value="0.114"/>
+
+  <!-- tool0 con d3 = 0, medido desde el suelo. Con d3 = 60 mm baja a 60,
+       que es la cota de los dos puntos de traspaso. -->
+  <xacro:property name="z_tool_max" value="0.120"/>
+  <xacro:property name="carrera_d3" value="0.080"/>
+  <xacro:property name="z_tool_min" value="${z_tool_max - carrera_d3}"/>
+
+  <!-- ================== Base y torre ===============================
+       Placa de acrilico de 300 x 300 x 6 sobre cuatro patas de goma de
+       5 mm. La estacion no va atornillada a la mesa: se sostiene por su
+       propio peso (factor de seguridad al vuelco 3.79 estatico y 1.76
+       dinamico, ver docs/estacion2/03-analisis-vuelco-y-transmision.md). -->
+  <xacro:property name="base_x"     value="0.300"/>
+  <xacro:property name="base_y"     value="0.300"/>
+  <xacro:property name="base_z"     value="0.006"/>
+  <xacro:property name="patas_z"    value="0.005"/>
+  <xacro:property name="torre_lado" value="0.080"/>   <!-- cajon de acrilico de 6 mm -->
+
+  <!-- ================== Eslabones ================================= -->
+  <xacro:property name="brazo_ancho"   value="0.064"/>
+  <xacro:property name="brazo_espesor" value="0.006"/>
+  <!-- Separacion entre el plano del eslabon 1 y el del eslabon 2 en el
+       codo: lazy susan "Placa giratoria" con hueco real de 6.4 mm. -->
+  <xacro:property name="hueco_codo"    value="0.0064"/>
+  <!-- Del eje de theta1 (cara inferior del eslabon 1) a la cara inferior
+       del eslabon 2: placa, separadores y lazy susan del codo. -->
+  <xacro:property name="z_codo"        value="0.042"/>
+  <xacro:property name="cola"          value="0.030"/>
+
+  <!-- ================== Eje vertical d3 ===========================
+       Husillo Tr8 de 8 mm de avance, con varilla de guia de 8 mm y
+       rodamiento lineal LMK8UU. El vastago baja desde el eslabon 2 y lleva
+       la mordaza en su extremo. -->
+  <xacro:property name="husillo_largo" value="0.130"/>
+  <xacro:property name="husillo_radio" value="0.004"/>
+  <xacro:property name="vastago_radio" value="0.004"/>
+  <xacro:property name="y_husillo"     value="0.018"/>
+  <xacro:property name="y_guia"        value="-0.018"/>
+
+  <!-- ================== Mordaza ===================================
+       Piñon de modulo 1 y 18 dientes en el eje del SG90 y dos cremalleras,
+       una por dedo, sobre carriles de guia. Apertura entre caras de 60 mm
+       (abierta) a 18 mm. Cada dedo se modela como una prismatica; el valor
+       articular es lo que se ha cerrado el dedo desde la apertura maxima:
+       0.011 deja 38 mm (la tarjeta) y 0.020 deja 20 mm (la pieza de la
+       linea). -->
+  <xacro:property name="pinza_x"        value="0.070"/>
+  <xacro:property name="pinza_y"        value="0.030"/>
+  <xacro:property name="pinza_z"        value="0.035"/>
+  <xacro:property name="dedo_x"         value="0.012"/>
+  <xacro:property name="dedo_y"         value="0.004"/>
+  <xacro:property name="dedo_largo"     value="0.030"/>
+  <!-- tool0 esta en las puntas de los dedos, como en el CAD. -->
+  <xacro:property name="dedo_bajo_tool" value="0.0"/>
+  <xacro:property name="luz_abierta"    value="0.060"/>
+  <xacro:property name="carrera_dedo"   value="0.021"/>   <!-- 60 a 18 mm -->
+
+  <!-- ================== Camara ====================================
+       Raspberry Pi Camera Module 3 Wide (102 x 67 grados), bajo el eslabon
+       2, 70 mm por detras del vastago hacia el codo y 9 mm a un lado,
+       mirando hacia abajo. Lente a 151 mm del suelo. -->
+  <xacro:property name="cam_x"     value="0.070"/>
+  <xacro:property name="cam_y"     value="0.009"/>
+  <xacro:property name="cam_z_abs" value="0.151"/>
+  <xacro:property name="cam_hfov"  value="1.780"/>        <!-- 102 grados -->
+  <xacro:property name="cam_ancho" value="640"/>
+  <xacro:property name="cam_alto"  value="360"/>
+
+  <!-- ================== Limites de articulacion ==================== -->
+  <xacro:property name="lim_theta1_inf" value="-0.5236"/>  <!-- -30 grados  -->
+  <xacro:property name="lim_theta1_sup" value="3.6652"/>   <!-- +210 grados -->
+  <xacro:property name="lim_theta2"     value="2.3562"/>   <!-- +/- 135     -->
+  <xacro:property name="home_theta1"    value="-0.5236"/>  <!-- final de carrera -->
+  <xacro:property name="home_theta2"    value="2.3562"/>
+
+  <!-- ================== Transmision ===============================
+       Pololu 37D 50:1 a 12 V, 200 rpm en vacio, 20.944 rad/s en el eje.
+       theta1 3:1 (polea 20T a 60T), theta2 1:1, d3 1:3 (60T a 20T, el
+       husillo gira tres veces mas rapido que el motor) sobre un husillo Tr8
+       de 8 mm de avance: 80 mm/s y 44 N. Las relaciones se eligieron por resolucion y par, no
+       por velocidad: la tarea es clasificar con error < 20 mm. -->
+  <xacro:property name="w_motor"        value="20.944"/>
+  <xacro:property name="relacion_t1"    value="3.0"/>
+  <xacro:property name="relacion_t2"    value="1.0"/>
+  <xacro:property name="relacion_d3"    value="${1.0/3.0}"/>
+  <xacro:property name="avance_husillo" value="0.008"/>
+  <xacro:property name="vel_t1"   value="${w_motor / relacion_t1}"/>
+  <xacro:property name="vel_t2"   value="${w_motor / relacion_t2}"/>
+  <xacro:property name="vel_pris" value="${w_motor / relacion_d3 / (2*pi) * avance_husillo}"/>
+
+  <!-- ================== Esfuerzos =================================
+       Manda el driver: el TB6612FNG da 1.2 A continuos por canal, que en el
+       37D 50:1 son unos 0.39 N.m en el eje del motor. -->
+  <xacro:property name="par_motor"           value="0.389"/>
+  <xacro:property name="rendimiento_husillo" value="0.2"/>
+  <xacro:property name="esfuerzo_t1" value="${par_motor * relacion_t1}"/>
+  <xacro:property name="esfuerzo_t2" value="${par_motor * relacion_t2}"/>
+  <xacro:property name="esfuerzo_pris"
+    value="${2 * pi * rendimiento_husillo * par_motor * relacion_d3 / avance_husillo}"/>
+
+  <!-- ================== Actuadores ================================ -->
+  <xacro:property name="motor_diametro" value="0.037"/>
+  <xacro:property name="motor_largo"    value="0.069"/>
+  <xacro:property name="motor_masa"     value="0.215"/>
+
+  <!-- ================== Materiales ================================ -->
+  <xacro:property name="densidad_acrilico" value="1180.0"/>
+  <xacro:property name="densidad_pla"      value="1240.0"/>
+  <xacro:property name="densidad_acero"    value="7850.0"/>
+
+  <!-- ==================================================================
+       Propiedades inerciales exportadas de Fusion (CAD v5.6), por eslabon,
+       respecto de su centro de masa y en el frame de cada eslabon. Tabla
+       completa en docs/estacion2/urdf-datos-cad.md.
+  =================================================================== -->
+  <xacro:property name="m_base"    value="1.90442"/>
+  <xacro:property name="c_base"    value="0.000626575 -0.00648773 0.0257964"/>
+  <xacro:property name="i_base"    value="0.0128735 0.0119845 0.020683 6.50749e-05 0.000466662 -6.44209e-05"/>
+  <xacro:property name="m_link1"   value="0.823112"/>
+  <xacro:property name="c_link1"   value="0.0303802 0.000210512 0.0190742"/>
+  <xacro:property name="i_link1"   value="0.00155782 0.0061408 0.00495907 -1.4081e-05 8.62015e-07 0.000266116"/>
+  <xacro:property name="m_link2"   value="0.872348"/>
+  <xacro:property name="c_link2"   value="0.0632409 0.000357949 0.0519959"/>
+  <xacro:property name="i_link2"   value="0.00229153 0.00314638 0.0013751 -2.03324e-05 -5.02331e-05 -0.000674028"/>
+  <xacro:property name="m_link3"   value="0.244588"/>
+  <xacro:property name="c_link3"   value="-0.0140787 -0.000819902 0.110504"/>
+  <xacro:property name="i_link3"   value="0.000703692 0.000743535 0.00016383 -1.04437e-05 8.52154e-06 0.000143958"/>
+  <xacro:property name="m_dedo"    value="0.00445"/>
+</robot>

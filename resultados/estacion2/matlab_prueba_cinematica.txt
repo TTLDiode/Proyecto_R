@@ -1,0 +1,23 @@
+
+== Cierre directa-inversa sobre el espacio alcanzable ==
+  inversas ensayadas     74664
+  resueltas              64926  (la otra rama puede salir de limites)
+  error maximo de cierre 2.56e-16 m
+
+== Rechazo de puntos imposibles (frame de la base) ==
+  mas alla del alcance       rechaza   radio fuera del alcance
+  dentro del radio muerto    rechaza   fuera de los limites de articulacion
+  demasiado alto             rechaza   altura fuera de la carrera
+  demasiado bajo             rechaza   altura fuera de la carrera
+  detras, a -90 grados       rechaza   fuera de los limites de articulacion
+
+== Puntos de tarea (frame world) ==
+  punto                      theta1   theta2   d3 (mm)  codo
+  Traspaso 1-2               148.90    67.28      60.0  arriba
+  Puesto de inspeccion        45.95    96.67      60.0  arriba
+  Traspaso 2-3                39.40   -85.90      60.0  abajo
+
+== Camara sobre el puesto de inspeccion ==
+  theta1 71.29  theta2 58.02  lente en (0.0000, 0.2000), error 5.59e-17 m
+  camara sobre el traspaso 1-2: no alcanza (radio fuera del alcance)
+
