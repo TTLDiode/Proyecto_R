@@ -16,10 +16,11 @@ setup(
     maintainer_email='santiagomach2@hotmail.com',
     description='Orquestador de la linea y nodo de prueba de estacion.',
     license='MIT',
-    entry_points={
+        entry_points={
         'console_scripts': [
             'orchestrator = line_orchestrator.orchestrator:main',
             'station_mock = line_orchestrator.station_mock:main',
+            'reponedor = line_orchestrator.reponedor:main',
         ],
     },
 )
