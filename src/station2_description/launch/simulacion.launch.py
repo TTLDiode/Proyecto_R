@@ -228,6 +228,14 @@ def _setup(context, *args, **kwargs):
             output='screen',
             parameters=[{'use_sim_time': True}],
         ),
+        # Visión: servicio /station2/clasificar
+        Node(
+            package='station2_control',
+            executable='vision',
+            name='vision',
+            output='screen',
+            parameters=[{'use_sim_time': True}],
+        ),
     ]
     return acciones
 
