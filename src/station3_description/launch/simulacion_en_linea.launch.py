@@ -34,7 +34,7 @@ def generate_launch_description():
     robot_description = ParameterValue(
         Command(['xacro ', xacro_path, ' control:=true',
                  ' controladores:=', controllers,
-                 ' pieza:=pieza_e3']),
+                 ' pieza:=pieza']),
         value_type=str)
 
     rsp = Node(
@@ -111,7 +111,8 @@ def generate_launch_description():
     return LaunchDescription([
         rsp,
         acople_bridge,
-        spawn_pieza,
+        # Con la E2 real la pieza es "pieza", la que deja la E2 en el
+        # traspaso; pieza_e3 (spawn_pieza) solo sirve con la E2 simulada.
         spawn_robot,
         RegisterEventHandler(OnProcessExit(
             target_action=spawn_robot, on_exit=[joint_state_broadcaster])),
