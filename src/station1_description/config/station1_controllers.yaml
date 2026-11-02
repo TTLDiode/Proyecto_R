@@ -76,11 +76,11 @@ brazo_controller:
     # simulado, igual que se cerraria en la Pico.
     interpolation_method: splines
     constraints:
-      stopped_velocity_tolerance: 0.02
-      goal_time: 1.0
-      station1/joint_1: { trajectory: 0.10, goal: 0.01 }
-      station1/joint_2: { trajectory: 0.10, goal: 0.01 }
-      station1/joint_3: { trajectory: 0.01, goal: 0.001 }
+      stopped_velocity_tolerance: 0.2
+      goal_time: 2.0
+      station1/joint_1: { trajectory: 0.5, goal: 0.15 }
+      station1/joint_2: { trajectory: 0.5, goal: 0.15 }
+      station1/joint_3: { trajectory: 0.02, goal: 0.01 }
 
 mordaza_controller:
   ros__parameters:

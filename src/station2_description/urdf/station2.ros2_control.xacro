@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!--
+  Interfaces de ros2_control de la Estacion 2. Adaptado de
+  station1_description/urdf/station1.ros2_control.xacro.
+
+  Interfaz de posicion: el lazo de posicion de los tres Pololu 37D se cierra
+  en la Pico con el encoder, no en el PC, y comandar posicion en la
+  simulacion reproduce esa reparticion de tareas.
+
+  A diferencia de la Estacion 1, el controller_manager vive en el espacio de
+  nombres station2 (como el de la Estacion 3): con las tres estaciones en el
+  mismo Gazebo, dos controller_manager en la raiz chocarian.
+
+  Posicion inicial: la de reposo, theta1 = 90 grados con el brazo apuntando
+  a +y, fuera de los dos puntos de traspaso.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="ini_theta1" value="${pi/2}"/>
+  <xacro:property name="ini_theta2" value="0.0"/>
+  <xacro:property name="ini_d3"     value="0.0"/>
+
+  <xacro:macro name="articulacion_mando" params="nombre minimo maximo inicial">
+    <joint name="${nombre}">
+      <command_interface name="position">
+        <param name="min">${minimo}</param>
+        <param name="max">${maximo}</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">${inicial}</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="station2_ros2_control" params="prefijo controladores">
+    <ros2_control name="${prefijo}sistema" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+      <xacro:articulacion_mando nombre="${prefijo}joint_1"
+          minimo="${lim_theta1_inf}" maximo="${lim_theta1_sup}" inicial="${ini_theta1}"/>
+      <xacro:articulacion_mando nombre="${prefijo}joint_2"
+          minimo="${-lim_theta2}" maximo="${lim_theta2}" inicial="${ini_theta2}"/>
+      <xacro:articulacion_mando nombre="${prefijo}joint_3"
+          minimo="0.0" maximo="${carrera_d3}" inicial="${ini_d3}"/>
+      <!-- Los dedos los mueve el servo a traves del piñon: son un actuador
+           comandable pero no un grado de libertad del brazo. -->
+      <xacro:articulacion_mando nombre="${prefijo}dedo_1_joint"
+          minimo="0.0" maximo="${carrera_dedo}" inicial="0.0"/>
+      <xacro:articulacion_mando nombre="${prefijo}dedo_2_joint"
+          minimo="0.0" maximo="${carrera_dedo}" inicial="0.0"/>
+    </ros2_control>
+
+    <gazebo>
+      <plugin filename="gz_ros2_control-system"
+              name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <ros>
+          <namespace>station2</namespace>
+        </ros>
+        <parameters>${controladores}</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+</robot>

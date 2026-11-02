@@ -1,19 +1,10 @@
-"""Agrega la Estacion 3, con controladores y su propia pieza, a un Gazebo que
-ya esta abierto con el mundo de la linea.
+"""Agrega la Estacion 3, con controladores, su pieza y el nodo logico,
+a un Gazebo que ya esta abierto con el mundo de la linea.
 
-Uso, en este orden y cada uno en su terminal:
+Uso:
     export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:<workspace>/install/station3_description/share
     ros2 launch station1_description simulacion.launch.py
     ros2 launch station3_description simulacion_en_linea.launch.py
-
-El export va en la terminal donde se lanza la Estacion 1, antes del launch: ese
-proceso es el que abre Gazebo, y solo asi encuentra las mallas de la Estacion 3.
-Sin el, el robot existe y los controladores funcionan, pero se ve sin geometria.
-
-No abre Gazebo ni repite el puente de /clock: ya lo levanta el launch de la
-Estacion 1, y dos puentes publicarian el reloj por duplicado. La estacion se
-coloca en la base que dice line_poses.yaml y su pieza (pieza_e3) en el punto
-de traspaso 2->3 de ese mismo archivo.
 """
 import math
 import os
@@ -40,8 +31,6 @@ def generate_launch_description():
     base = poses['station_bases']['station3']
     hand = poses['handoff_2_3']['position']
 
-    # El argumento pieza hace que el acople apunte a la pieza propia de esta
-    # estacion y no a la "pieza" de la Estacion 1.
     robot_description = ParameterValue(
         Command(['xacro ', xacro_path, ' control:=true',
                  ' controladores:=', controllers,
@@ -62,7 +51,6 @@ def generate_launch_description():
                    '-z', str(base['z']),
                    '-Y', str(math.radians(base['yaw']))])
 
-    # Misma pieza que la de line.sdf (20 x 20 x 12 mm, 20 g), en azul.
     pieza_sdf = (
         '<sdf version="1.9"><model name="pieza_e3">'
         f'<pose>{hand["x"]} {hand["y"]} 0.030 0 0 0</pose>'
@@ -87,8 +75,6 @@ def generate_launch_description():
                    '-x', str(hand['x']), '-y', str(hand['y']),
                    '-z', '0.030'])
 
-    # Solo los avisos de acople de esta estacion; el reloj ya lo puentea el
-    # launch de la Estacion 1.
     acople_bridge = Node(
         package='ros_gz_bridge', executable='parameter_bridge',
         arguments=[
@@ -107,12 +93,20 @@ def generate_launch_description():
         arguments=['arm_controller',
                    '--controller-manager', '/station3/controller_manager'])
 
-    # El plugin DetachableJoint nace acoplado: se suelta una vez, cuando el
-    # controlador del brazo ya esta activo.
     desacople_inicial = ExecuteProcess(
         cmd=['ros2', 'topic', 'pub', '--once', '/station3/pieza/detach',
              'std_msgs/msg/Empty', '{}'],
         output='screen')
+
+    # Nodo lógico de la estación (habla con el orquestador)
+    nodo_estacion = Node(
+        package='station3_control',
+        executable='nodo_estacion',
+        name='nodo_estacion',
+        namespace='station3',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
 
     return LaunchDescription([
         rsp,
@@ -125,4 +119,7 @@ def generate_launch_description():
             target_action=joint_state_broadcaster, on_exit=[arm_controller])),
         RegisterEventHandler(OnProcessExit(
             target_action=arm_controller, on_exit=[desacople_inicial])),
+
+        # Nodo de la estación
+        nodo_estacion,
     ])
