@@ -34,7 +34,10 @@ def generate_launch_description():
     robot_description = ParameterValue(
         Command(['xacro ', xacro_path, ' control:=true',
                  ' controladores:=', controllers,
-                 ' pieza:=pieza']),
+                 ' pieza:=pieza',
+                 ' anclar_mundo:=true',
+                 ' base_x:=', str(base['x']), ' base_y:=', str(base['y']),
+                 ' base_yaw:=', str(math.radians(base['yaw']))]),
         value_type=str)
 
     rsp = Node(
@@ -46,10 +49,7 @@ def generate_launch_description():
     spawn_robot = Node(
         package='ros_gz_sim', executable='create', output='screen',
         arguments=['-topic', '/station3/robot_description',
-                   '-name', 'station3',
-                   '-x', str(base['x']), '-y', str(base['y']),
-                   '-z', str(base['z']),
-                   '-Y', str(math.radians(base['yaw']))])
+                   '-name', 'station3'])
 
     pieza_sdf = (
         '<sdf version="1.9"><model name="pieza_e3">'
