@@ -83,6 +83,9 @@ def spawn_pieza(ambient, diffuse):
         "-world", WORLD,
         "-name", MODEL,
         "-string", sdf,
+        # Sin -x/-y/-z, create ignora la <pose> del SDF y la pieza nace en
+        # el origen (dentro de la base de la E1).
+        "-x", str(X), "-y", str(Y), "-z", str(Z),
     ], timeout=15)
     return r is not None and r.returncode == 0
 
@@ -128,6 +131,11 @@ class Reponedor(Node):
         time.sleep(0.3)
 
         if spawn_pieza(ambient, diffuse):
+            # Los acoples nacen enganchados a la pieza nueva: se sueltan.
+            time.sleep(0.5)
+            self._pub_detach_s1.publish(empty)
+            self._pub_detach_s2.publish(empty)
+            self._pub_detach_s3.publish(empty)
             self.get_logger().info(
                 f"Pieza nueva en bandeja ({X}, {Y}, {Z}), categoría esperada {cat}")
         else:
