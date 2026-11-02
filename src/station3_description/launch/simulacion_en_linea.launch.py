@@ -36,6 +36,9 @@ def generate_launch_description():
                  ' controladores:=', controllers,
                  ' pieza:=pieza',
                  ' anclar_mundo:=true',
+                 # Homing en la linea: la pose de espera del nodo
+                 # (PUNTO_ESPERA, sobre la caja B), fuera de handoff_2_3.
+                 ' q1_inicial:=-1.0472 q2_inicial:=2.0944 q3_inicial:=-0.0016',
                  ' base_x:=', str(base['x']), ' base_y:=', str(base['y']),
                  ' base_yaw:=', str(math.radians(base['yaw']))]),
         value_type=str)

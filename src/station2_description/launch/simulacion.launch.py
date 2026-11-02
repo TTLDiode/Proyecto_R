@@ -80,14 +80,14 @@ def sdf_pieza(nombre, rgb):
 PUESTO_INSPECCION = (0.500, 0.200)
 
 
-def sdf_soporte(nombre, lado=0.060):
+def sdf_soporte(nombre, lado=0.060, alto=0.042):
     return (
         f'<sdf version="1.9"><model name="{nombre}"><static>true</static>'
         '<link name="superficie">'
         '<collision name="collision"><geometry><box>'
-        f'<size>{lado} {lado} 0.042</size></box></geometry></collision>'
+        f'<size>{lado} {lado} {alto}</size></box></geometry></collision>'
         '<visual name="visual"><geometry><box>'
-        f'<size>{lado} {lado} 0.042</size></box></geometry>'
+        f'<size>{lado} {lado} {alto}</size></box></geometry>'
         '<material><ambient>0.35 0.40 0.45 1</ambient>'
         '<diffuse>0.35 0.40 0.45 1</diffuse></material></visual>'
         '</link></model></sdf>')
@@ -171,9 +171,15 @@ def _setup(context, *args, **kwargs):
                     output='screen', arguments=argumentos)
 
     if con_soporte:
+        # 12 mm mas bajo que el del traspaso 1-2: la Estacion 3 solo sube el
+        # efector hasta z = 0.0615 y con el soporte de 42 mm pasaba a 2.5 mm
+        # de la pieza y la empujaba al llegar. La E2 no baja mas (carrera de
+        # d3): suelta a la altura de siempre y la pieza cae 12 mm.
+        alto = 0.042 - 0.012
         acciones.append(crear('soporte_traspaso_2_3', traspaso_23['x'],
-                              traspaso_23['y'], 0.021,
-                              cadena=sdf_soporte('soporte_traspaso_2_3')))
+                              traspaso_23['y'], alto / 2,
+                              cadena=sdf_soporte('soporte_traspaso_2_3',
+                                                 alto=alto)))
     acciones.append(crear('puesto_inspeccion', PUESTO_INSPECCION[0],
                           PUESTO_INSPECCION[1], 0.021,
                           cadena=sdf_soporte('puesto_inspeccion', 0.040)))
