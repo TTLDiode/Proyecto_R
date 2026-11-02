@@ -113,6 +113,21 @@
 
   <link name="${p}world"/>
 
+  <!-- En la linea, Gazebo solo deja fijo al suelo un link llamado "world".
+       Con solo ${p}world la base queda suelta y un golpe la gira. -->
+  <xacro:arg name="anclar_mundo" default="false"/>
+  <xacro:arg name="base_x" default="0.0"/>
+  <xacro:arg name="base_y" default="0.0"/>
+  <xacro:arg name="base_yaw" default="0.0"/>
+  <xacro:if value="$(arg anclar_mundo)">
+    <link name="world"/>
+    <joint name="${p}anclaje" type="fixed">
+      <parent link="world"/>
+      <child link="${p}world"/>
+      <origin xyz="$(arg base_x) $(arg base_y) 0" rpy="0 0 $(arg base_yaw)"/>
+    </joint>
+  </xacro:if>
+
   <joint name="${p}world_to_base" type="fixed">
     <parent link="${p}world"/>
     <child link="${p}base_link"/>
