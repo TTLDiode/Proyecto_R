@@ -49,6 +49,8 @@ def sdf_pieza(ambient, diffuse):
         <geometry><box><size>0.020 0.020 0.012</size></box></geometry>
         <surface>
           <friction><ode><mu>0.9</mu><mu2>0.9</mu2></ode></friction>
+          <!-- 0x01: no choca con la ventosa de la E3 (0x02). -->
+          <contact><collide_bitmask>0x01</collide_bitmask></contact>
         </surface>
       </collision>
       <visual name="visual">

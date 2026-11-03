@@ -113,6 +113,20 @@
 
   <link name="${p}world"/>
 
+  <!-- En la linea la pieza llega sobre un soporte de 42 mm y la ventosa, aun
+       con la prismatica al tope, pasa a 2.5 mm de ella: la rozaba y la
+       empujaba antes de acoplarla. La ventosa no choca con la pieza
+       (collide_bitmask 0x02; la pieza usa 0x01) y la sigue cargando el acople.
+       Con el resto del mundo choca igual. -->
+  <xacro:arg name="ventosa_sin_pieza" default="false"/>
+  <xacro:if value="$(arg ventosa_sin_pieza)">
+    <gazebo reference="${p}Prismatico_1">
+      <collision>
+        <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
+      </collision>
+    </gazebo>
+  </xacro:if>
+
   <!-- En la linea, Gazebo solo deja fijo al suelo un link llamado "world".
        Con solo ${p}world la base queda suelta y un golpe la gira. -->
   <xacro:arg name="anclar_mundo" default="false"/>

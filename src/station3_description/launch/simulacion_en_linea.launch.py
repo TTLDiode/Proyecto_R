@@ -36,6 +36,7 @@ def generate_launch_description():
                  ' controladores:=', controllers,
                  ' pieza:=pieza',
                  ' anclar_mundo:=true',
+                 ' ventosa_sin_pieza:=true',
                  # Homing en la linea: la pose de espera del nodo
                  # (PUNTO_ESPERA, sobre la caja B), fuera de handoff_2_3.
                  ' q1_inicial:=-1.0472 q2_inicial:=2.0944 q3_inicial:=-0.0016',
