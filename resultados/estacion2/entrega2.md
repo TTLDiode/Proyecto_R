@@ -59,6 +59,142 @@ y_c = a₁·sen θ₁ + 0.0706·sen(θ₁+θ₂+7.3°)
 z_c = 0.151 m (fija)
 ```
 
+### Verificación de la directa: MATLAB (códigos de clase) contra Python
+
+La idea es una sola: los mismos ángulos de entrada deben dar la misma matriz
+T 0-herramienta en el código de clase de MATLAB y en `cinematica.py`. Los dos
+usan convenciones DH distintas (DH modificado en el código del curso, DH
+estándar en Python), así que si coinciden, las dos tablas describen el mismo
+robot.
+
+Tabla DH en la convención del código de clase, `DH = [a_ij α_ij s_j θ_j]`, mm:
+
+| fila | a | α | s | θ |
+|---|---|---|---|---|
+| {0}→{1} | 0 | 0 | 114 | θ₁ |
+| {1}→{2} | 160 | 0 | 6 | θ₂ |
+| {2}→{3} | 140 | π | d₃ | 0 |
+| {3}→{T} | 0 | 0 | 0 | 0 |
+
+#### a) Pose de reposo, brazo estirado (θ₁ = 90°, θ₂ = 0°, d₃ = 0)
+
+Valor esperado: x = 160·cos 90° + 140·cos 90° = 0, y = 160 + 140 = 300 mm,
+z = 114 + 6 − 0 = 120 mm.
+
+**MATLAB**, código de clase `ri_dk_ms3r_TH_DH.m` sin más cambio que la tabla:
+
+```matlab
+DH=[   0  deg2rad(0)    114 deg2rad(90);   % 0-1
+     160  deg2rad(0)      6 deg2rad(0);    % 1-2
+     140  deg2rad(180)    0 deg2rad(0);    % 2-3, s = d3 = 0
+       0  0               0 0];            % 3-herramienta
+```
+
+```
+T(:,:,4) =
+    0.0000    1.0000    0.0000    0.0000
+    1.0000   -0.0000   -0.0000  300.0000
+         0    0.0000   -1.0000  120.0000
+         0         0         0    1.0000
+```
+
+![Directa en reposo, MATLAB](entrega2/directa_reposo_matlab.png)
+
+**Python**, `cinematica.directa` (posición en metros):
+
+```
+cd ~/Proyecto_R/src/station2_control
+python3
+>>> import math
+>>> from station2_control.cinematica import directa
+>>> T, p = directa((math.radians(90), math.radians(0), 0.0))
+>>> for fila in T: print([round(v, 4) for v in fila])
+[0.0, 1.0, 0.0, 0.0]
+[1.0, -0.0, -0.0, 0.3]
+[0.0, 0.0, -1.0, 0.12]
+[0.0, 0.0, 0.0, 1.0]
+```
+
+![Directa en reposo, Python](entrega2/directa_reposo_python.png)
+
+Las dos matrices son iguales: la herramienta queda en (0, 300, 120) mm, el
+brazo apunta a +y y el −1 de la tercera fila indica que el eje z de la
+herramienta apunta hacia abajo (el α = π de la fila 2-3).
+
+#### b) Puntos de la tarea y dos puntos libres
+
+**MATLAB**, `e2_ri_dk_TH_DH.m`: el mismo código de clase (misma función
+`T_DH`) evaluado en un bucle sobre las configuraciones que devolvió MoveIt en
+`comparar_moveit`. Los tres primeros son los de la tarea (recogida en el
+traspaso 1-2, puesto de inspección y entrega en el traspaso 2-3); los dos
+libres son puntos que la estación no visita, a otras alturas y con el codo en
+la otra rama, para probar la directa fuera de los puntos de siempre. Todo en
+el marco de la base (la base está en x = 500 mm del mundo).
+
+| punto | q (°, °, mm) | p directa (mm) | p objetivo (mm) | error (mm) |
+|---|---|---|---|---|
+| traspaso_12 | 148.90, 67.29, 60 | (−249.992, −0.020, 60.000) | (−250, 0, 60) | 0.0215 |
+| inspeccion | 45.95, 96.67, 60 | (−0.002, 199.991, 60.000) | (0, 200, 60) | 0.0091 |
+| traspaso_23 | 39.40, −85.90, 60 | (220.007, 0.004, 60.000) | (220, 0, 60) | 0.0083 |
+| libre_1 | 136.15, −52.46, 40 | (−99.998, 249.995, 80.000) | (−100, 250, 80) | 0.0050 |
+| libre_2 | 67.97, −67.28, 20 | (200.005, 150.004, 100.000) | (200, 150, 100) | 0.0060 |
+
+```
+T 0-herramienta en traspaso_12:
+   -0.8071   -0.5905   -0.0000 -249.9916
+   -0.5905    0.8071    0.0000   -0.0197
+         0    0.0000   -1.0000   60.0000
+         0         0         0    1.0000
+```
+
+La rotación es un giro de θ₁ + θ₂ = 216.19° en z (cos = −0.8071,
+sen = −0.5905) con el eje z de la herramienta hacia abajo.
+
+![Directa en los puntos de la tarea, MATLAB](entrega2/directa_puntos_matlab.png)
+
+**Python**, `cinematica.directa` con las mismas configuraciones y los mismos
+puntos pedidos, en el intérprete:
+
+```
+cd ~/Proyecto_R/src/station2_control
+python3
+>>> import math
+>>> from station2_control.cinematica import directa
+>>> Q = {'traspaso_12': (148.90, 67.29, 60), 'inspeccion': (45.95, 96.67, 60),
+...      'traspaso_23': (39.40, -85.90, 60), 'libre_1': (136.15, -52.46, 40),
+...      'libre_2': (67.97, -67.28, 20)}
+>>> P = {'traspaso_12': (-250, 0, 60), 'inspeccion': (0, 200, 60),
+...      'traspaso_23': (220, 0, 60), 'libre_1': (-100, 250, 80),
+...      'libre_2': (200, 150, 100)}
+>>> for n, (t1, t2, d3) in Q.items():
+...     T, p = directa((math.radians(t1), math.radians(t2), d3/1000))
+...     p = [v*1000 for v in p]
+...     print(f'{n:12s} ({p[0]:9.3f},{p[1]:9.3f},{p[2]:8.3f})  error {math.dist(p, P[n]):.4f} mm')
+...
+traspaso_12  ( -249.992,   -0.020,  60.000)  error 0.0215 mm
+inspeccion   (   -0.002,  199.991,  60.000)  error 0.0091 mm
+traspaso_23  (  220.007,    0.004,  60.000)  error 0.0083 mm
+libre_1      (  -99.998,  249.995,  80.000)  error 0.0050 mm
+libre_2      (  200.005,  150.004, 100.000)  error 0.0060 mm
+```
+
+Lo mismo, con la T del traspaso_12 y la pose de reposo, en un solo comando:
+`python3 -m station2_control.verificar_directa`
+(`station2_control/verificar_directa.py`).
+
+Las cinco posiciones y los cinco errores coinciden con MATLAB hasta el
+último decimal impreso.
+
+![Directa en los puntos de la tarea, Python](entrega2/directa_puntos_python.png)
+
+**Cómo leer el error.** Es la distancia entre la posición que da la directa
+y el punto pedido. Los 0.005 a 0.022 mm no son imprecisión del modelo: salen
+de que los ángulos de entrada están redondeados a dos decimales (por ejemplo,
+67.29° en lugar del valor exacto). Con ángulos exactos el error de cierre es
+de 1e-16 m (`prueba_cinematica`, más abajo). Esto verifica el modelo
+cinemático; la precisión de posicionamiento de la guía (< 20 mm) se mide en
+la simulación con la pieza real, en `prueba_estacion.md` (Entrega 3).
+
 ---
 
 ## 3. Cinemática inversa, en forma cerrada
