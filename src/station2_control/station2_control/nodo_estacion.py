@@ -210,9 +210,14 @@ class NodoEstacion2(ControlPuntoAPunto):
         self._ir_a_punto(arriba, 'traslado', rama)
         self._ir_a_punto(bajo, 'descenso a soltar', rama)
         self._error_herramienta_pendiente = self._medir(bajo)
-        # Primero se suelta el acople y despues se abre la mordaza.
+        # El acople se suelta mientras la mordaza se abre, no antes: en el
+        # traspaso 2-3 el soporte esta 12 mm por debajo de la pieza y, soltada
+        # antes, se veia caer con la mordaza todavia cerrada.
+        apertura = threading.Thread(target=self.abrir_mordaza, daemon=True)
+        apertura.start()
+        time.sleep(0.15)
         self._desacoplar(pieza)
-        self.abrir_mordaza()
+        apertura.join()
         self._ir_a_punto(arriba, 'ascenso sin la pieza', rama)
 
     def _inspeccionar(self, punto):
