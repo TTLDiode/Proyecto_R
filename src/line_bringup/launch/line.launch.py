@@ -61,6 +61,8 @@ def _setup(context, *args, **kwargs):
             executable='reponedor',
             name='reponedor_pieza',
             output='screen',
+            # Tras la ultima pieza no se repone otra en la bandeja.
+            parameters=[{'n_parts': n_parts}],
         ))
 
     return nodes

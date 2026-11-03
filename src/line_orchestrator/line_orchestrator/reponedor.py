@@ -153,6 +153,9 @@ class Reponedor(Node):
     def __init__(self):
         super().__init__("reponedor_pieza")
         self._i = 0
+        # 0 = sin limite. Con n_parts, tras la ultima pieza no se repone otra.
+        self.declare_parameter("n_parts", 0)
+        self._n_parts = int(self.get_parameter("n_parts").value)
         self._color_actual = COLOR_INICIAL
         self._lock = threading.Lock()
         self._pub_detach_s1 = self.create_publisher(
@@ -177,8 +180,7 @@ class Reponedor(Node):
     def _reponer(self, part_id):
         ambient, diffuse, cat = COLORES[self._i % len(COLORES)]
         self._i += 1
-        self.get_logger().info(
-            f"Ciclo {part_id} terminado → reponiendo pieza color {cat}")
+        self.get_logger().info(f"Ciclo {part_id} terminado")
 
         empty = Empty()
         self._pub_detach_s1.publish(empty)
@@ -196,6 +198,11 @@ class Reponedor(Node):
 
         eliminar_pieza()
         time.sleep(0.3)
+
+        if self._n_parts and part_id >= self._n_parts:
+            self.get_logger().info(
+                f"Pieza {part_id} de {self._n_parts}: fin, no se repone otra")
+            return
 
         if spawn_pieza(ambient, diffuse):
             self._color_actual = (ambient, diffuse)
