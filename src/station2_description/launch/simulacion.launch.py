@@ -171,11 +171,12 @@ def _setup(context, *args, **kwargs):
                     output='screen', arguments=argumentos)
 
     if con_soporte:
-        # 12 mm mas bajo que el del traspaso 1-2: la Estacion 3 solo sube el
+        # 6 mm mas bajo que el del traspaso 1-2: la Estacion 3 solo sube el
         # efector hasta z = 0.0615 y con el soporte de 42 mm pasaba a 2.5 mm
-        # de la pieza y la empujaba al llegar. La E2 no baja mas (carrera de
-        # d3): suelta a la altura de siempre y la pieza cae 12 mm.
-        alto = 0.042 - 0.012
+        # de la pieza y la empujaba al llegar (con 6 mm menos pasa a 8.5 mm).
+        # La E2 no baja mas (carrera de d3): suelta a la altura de siempre y
+        # la pieza cae 6 mm al abrirse la mordaza.
+        alto = 0.042 - 0.006
         acciones.append(crear('soporte_traspaso_2_3', traspaso_23['x'],
                               traspaso_23['y'], alto / 2,
                               cadena=sdf_soporte('soporte_traspaso_2_3',
