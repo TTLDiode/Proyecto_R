@@ -30,6 +30,7 @@ Las aproximaciones son verticales: en una RRP el descenso es la prismatica
 sola, con las rotacionales quietas, y la pieza no se arrastra de lado.
 """
 import math
+import threading
 import time
 
 import rclpy
@@ -209,13 +210,9 @@ class NodoEstacion2(ControlPuntoAPunto):
         self._ir_a_punto(arriba, 'traslado', rama)
         self._ir_a_punto(bajo, 'descenso a soltar', rama)
         self._error_herramienta_pendiente = self._medir(bajo)
-        # El acople se suelta cuando la mordaza ya termino de abrirse, no antes:
-        # en el traspaso 2-3 el soporte esta 6 mm por debajo de la pieza y,
-        # soltada antes, se veia caer con la mordaza todavia cerrada. Se espera
-        # al controlador (tiempo simulado), no un tiempo fijo de reloj, porque
-        # con la PC cargada Gazebo corre mas lento que el tiempo real.
-        self.abrir_mordaza()
+        # Primero se suelta el acople y despues se abre la mordaza.
         self._desacoplar(pieza)
+        self.abrir_mordaza()
         self._ir_a_punto(arriba, 'ascenso sin la pieza', rama)
 
     def _inspeccionar(self, punto):

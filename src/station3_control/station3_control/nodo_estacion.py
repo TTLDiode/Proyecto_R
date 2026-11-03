@@ -45,10 +45,10 @@ Z_AGARRE = 0.017
 # Altura maxima del efector (s3 = 0).
 Z_MAXIMA = 0.0615
 # En el traspaso 2-3 la pieza no esta en el suelo: la E2 la deja sobre su
-# soporte (cara alta en z = 0.036), con el centro 18 mm por debajo de la z de
+# soporte (cara alta en z = 0.042), con el centro 12 mm por debajo de la z de
 # handoff_2_3. Se agarra 11 mm por encima del centro, igual que en el suelo
 # (Z_AGARRE vs 0.006).
-DZ_AGARRE_TRASPASO = -0.007
+DZ_AGARRE_TRASPASO = -0.001
 # Pose de espera: sobre la caja B, lejos del traspaso. Con q=(0,0,0) el
 # efector queda encima de handoff_2_3 y la E2 choca al dejar la pieza.
 PUNTO_ESPERA = (0.10, 0.0)
