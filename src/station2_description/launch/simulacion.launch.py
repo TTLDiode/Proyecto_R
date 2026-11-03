@@ -80,14 +80,14 @@ def sdf_pieza(nombre, rgb):
 PUESTO_INSPECCION = (0.500, 0.200)
 
 
-def sdf_soporte(nombre, lado=0.060):
+def sdf_soporte(nombre, lado=0.060, alto=0.042):
     return (
         f'<sdf version="1.9"><model name="{nombre}"><static>true</static>'
         '<link name="superficie">'
         '<collision name="collision"><geometry><box>'
-        f'<size>{lado} {lado} 0.042</size></box></geometry></collision>'
+        f'<size>{lado} {lado} {alto}</size></box></geometry></collision>'
         '<visual name="visual"><geometry><box>'
-        f'<size>{lado} {lado} 0.042</size></box></geometry>'
+        f'<size>{lado} {lado} {alto}</size></box></geometry>'
         '<material><ambient>0.35 0.40 0.45 1</ambient>'
         '<diffuse>0.35 0.40 0.45 1</diffuse></material></visual>'
         '</link></model></sdf>')

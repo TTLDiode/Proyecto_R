@@ -34,7 +34,14 @@ def generate_launch_description():
     robot_description = ParameterValue(
         Command(['xacro ', xacro_path, ' control:=true',
                  ' controladores:=', controllers,
-                 ' pieza:=pieza_e3']),
+                 ' pieza:=pieza',
+                 ' anclar_mundo:=true',
+                 ' ventosa_sin_pieza:=true',
+                 # Homing en la linea: la pose de espera del nodo
+                 # (PUNTO_ESPERA, sobre la caja B), fuera de handoff_2_3.
+                 ' q1_inicial:=-1.0472 q2_inicial:=2.0944 q3_inicial:=-0.0016',
+                 ' base_x:=', str(base['x']), ' base_y:=', str(base['y']),
+                 ' base_yaw:=', str(math.radians(base['yaw']))]),
         value_type=str)
 
     rsp = Node(
@@ -46,10 +53,7 @@ def generate_launch_description():
     spawn_robot = Node(
         package='ros_gz_sim', executable='create', output='screen',
         arguments=['-topic', '/station3/robot_description',
-                   '-name', 'station3',
-                   '-x', str(base['x']), '-y', str(base['y']),
-                   '-z', str(base['z']),
-                   '-Y', str(math.radians(base['yaw']))])
+                   '-name', 'station3'])
 
     pieza_sdf = (
         '<sdf version="1.9"><model name="pieza_e3">'
@@ -111,7 +115,8 @@ def generate_launch_description():
     return LaunchDescription([
         rsp,
         acople_bridge,
-        spawn_pieza,
+        # Con la E2 real la pieza es "pieza", la que deja la E2 en el
+        # traspaso; pieza_e3 (spawn_pieza) solo sirve con la E2 simulada.
         spawn_robot,
         RegisterEventHandler(OnProcessExit(
             target_action=spawn_robot, on_exit=[joint_state_broadcaster])),

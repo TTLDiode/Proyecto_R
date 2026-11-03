@@ -1,3 +1,7 @@
+> **Probar la línea completa (E1 + E2 + E3 + orquestador):** ver
+> [`docs/COMO_PROBAR_LINEA.md`](docs/COMO_PROBAR_LINEA.md). En corto, tras
+> `colcon build`: `scripts/correr_linea.sh 3`.
+
 ## Qué hay aquí
 
 | ruta | estado | qué es |

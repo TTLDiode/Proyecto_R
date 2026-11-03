@@ -42,6 +42,16 @@ NOMBRES_ARTICULACIONES = [
 
 Z_APROXIMACION = 0.060
 Z_AGARRE = 0.017
+# Altura maxima del efector (s3 = 0).
+Z_MAXIMA = 0.0615
+# En el traspaso 2-3 la pieza no esta en el suelo: la E2 la deja sobre su
+# soporte (cara alta en z = 0.042), con el centro 12 mm por debajo de la z de
+# handoff_2_3. Se agarra 11 mm por encima del centro, igual que en el suelo
+# (Z_AGARRE vs 0.006).
+DZ_AGARRE_TRASPASO = -0.001
+# Pose de espera: sobre la caja B, lejos del traspaso. Con q=(0,0,0) el
+# efector queda encima de handoff_2_3 y la E2 choca al dejar la pieza.
+PUNTO_ESPERA = (0.10, 0.0)
 TIEMPO_MOVIMIENTO = 3.0
 
 # Desplazamientos de deposito, uno por pieza, RELATIVOS al centro de cada
@@ -114,7 +124,23 @@ class NodoEstacion3(Node):
         self.srv_start = self.create_service(
             StartTask, '/line/station3/start', self._on_start)
 
+        threading.Thread(target=self._ir_a_espera, daemon=True).start()
+
         self.get_logger().info('Nodo de Estacion 3 listo.')
+
+    def _ir_a_espera(self):
+        """Lleva el brazo a la pose de espera en cuanto el controlador
+        acepta trayectorias (antes de activarse las rechaza)."""
+        for _ in range(60):
+            if self.ocupado:
+                return
+            try:
+                self._mover(PUNTO_ESPERA[0], PUNTO_ESPERA[1], Z_APROXIMACION)
+                self.get_logger().info('Brazo en pose de espera.')
+                return
+            except RuntimeError:
+                time.sleep(2.0)
+        self.get_logger().warn('No se pudo llevar el brazo a la pose de espera.')
 
     def _esperar(self, future, timeout=60.0):
         """Bloquea este hilo hasta que el future termine. Devuelve su
@@ -197,13 +223,15 @@ class NodoEstacion3(Node):
         # 1. Ir sobre el punto de traspaso, bajar, acoplar, subir
         hx = self.poses['handoff_2_3']['position']['x']
         hy = self.poses['handoff_2_3']['position']['y']
+        hz = self.poses['handoff_2_3']['position']['z']
         lx, ly, _ = mundo_a_local(hx, hy, 0.0, self.base_x, self.base_y, self.yaw)
+        z_agarre = hz + DZ_AGARRE_TRASPASO
 
-        self._mover(lx, ly, Z_APROXIMACION)
-        self._mover(lx, ly, Z_AGARRE)
+        self._mover(lx, ly, Z_MAXIMA)
+        self._mover(lx, ly, z_agarre)
         self.pub_attach.publish(Empty())
         time.sleep(0.3)
-        self._mover(lx, ly, Z_APROXIMACION)
+        self._mover(lx, ly, Z_MAXIMA)
 
         # 2. Ir sobre la caja correspondiente, bajar, desacoplar, subir
         lx, ly = self._slot_local(categoria)
@@ -215,6 +243,7 @@ class NodoEstacion3(Node):
         self.pub_detach.publish(Empty())
         time.sleep(0.3)
         self._mover(lx, ly, Z_APROXIMACION)
+        self._mover(PUNTO_ESPERA[0], PUNTO_ESPERA[1], Z_APROXIMACION)
 
         self.conteo_por_categoria[categoria] = (
             self.conteo_por_categoria.get(categoria, 0) + 1)

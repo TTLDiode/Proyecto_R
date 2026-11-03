@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- Pose al aparecer en Gazebo. 0 por defecto (como siempre); el launch de
+       la linea pasa la pose de espera, fuera de handoff_2_3. -->
+  <xacro:arg name="q1_inicial" default="0.0"/>
+  <xacro:arg name="q2_inicial" default="0.0"/>
+  <xacro:arg name="q3_inicial" default="0.0"/>
+
   <xacro:if value="$(arg control)">
     <ros2_control name="GazeboSystem" type="system">
       <hardware>
@@ -8,19 +14,25 @@
       </hardware>
       <joint name="${p}joint1_rev">
         <command_interface name="position"/>
-        <state_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">$(arg q1_inicial)</param>
+        </state_interface>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
       <joint name="${p}joint2_rev">
         <command_interface name="position"/>
-        <state_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">$(arg q2_inicial)</param>
+        </state_interface>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
       <joint name="${p}joint3_prism">
         <command_interface name="position"/>
-        <state_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">$(arg q3_inicial)</param>
+        </state_interface>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
