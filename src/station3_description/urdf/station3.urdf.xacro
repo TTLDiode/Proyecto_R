@@ -113,18 +113,24 @@
 
   <link name="${p}world"/>
 
-  <!-- En la linea la pieza llega sobre un soporte de 42 mm y la ventosa, aun
-       con la prismatica al tope, pasa a 2.5 mm de ella: la rozaba y la
-       empujaba antes de acoplarla. La ventosa no choca con la pieza
-       (collide_bitmask 0x02; la pieza usa 0x01) y la sigue cargando el acople.
-       Con el resto del mundo choca igual. -->
+  <!-- En la linea la pieza llega sobre un soporte de 42 mm (cara alta de la
+       pieza en z = 0.054). La E3 esta disenada para coger del suelo: la guia
+       de Link2_1 junto a la prismatica baja hasta z = 0.0504 y la ventosa, con
+       la prismatica al tope, hasta 0.0565, asi que al llegar rozaban la pieza
+       y la empujaban antes de acoplarla. En la linea esos dos eslabones no
+       chocan con la pieza (collide_bitmask 0x02; la pieza usa 0x01) y la
+       sigue cargando el acople. Con el resto del mundo chocan igual. -->
   <xacro:arg name="ventosa_sin_pieza" default="false"/>
   <xacro:if value="$(arg ventosa_sin_pieza)">
-    <gazebo reference="${p}Prismatico_1">
-      <collision>
-        <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
-      </collision>
-    </gazebo>
+    <xacro:macro name="sin_choque_pieza" params="eslabon">
+      <gazebo reference="${eslabon}">
+        <collision>
+          <surface><contact><collide_bitmask>0x02</collide_bitmask></contact></surface>
+        </collision>
+      </gazebo>
+    </xacro:macro>
+    <xacro:sin_choque_pieza eslabon="${p}Prismatico_1"/>
+    <xacro:sin_choque_pieza eslabon="${p}Link2_1"/>
   </xacro:if>
 
   <!-- En la linea, Gazebo solo deja fijo al suelo un link llamado "world".
