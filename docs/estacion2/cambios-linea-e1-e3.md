@@ -43,7 +43,7 @@ Cada punto dice el archivo y el commit donde está.
 - `line_bringup/worlds/line.sdf`: la pieza con `collide_bitmask` 0x01, para
   que no choque con la ventosa de la E3 (882bf60).
 
-## Estación 2 (para referencia)
+## Estación 2 (para referencia)..
 
 - `station2_description/config/station2_controllers.yaml`: tolerancia de
   seguimiento de `joint_1` y `joint_2` a 0.5 rad (ae61109).
